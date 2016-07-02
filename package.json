@@ -1,0 +1,40 @@
+{
+  "name": "PaintWar",
+  "version": "0.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "build": "browserify src/client.js -o dist/bundle.js && echo 'built!'",
+    "watch": "chokidar 'src/**/*.js' 'test/**/*.js' -c 'npm test && npm run build'",
+    "test": "standard && tape test/**/*.spec.js | tap-notify | tap-spec",
+    "start": "npm i --only=dev && npm run build && node src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Reynau/PaintWar.git"
+  },
+  "author": "Xavier Lopez Reynau",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Reynau/PaintWar/issues"
+  },
+  "homepage": "https://github.com/Reynau/PaintWar#readme",
+  "devDependencies": {
+    "browserify": "^13.0.1",
+    "chokidar-cli": "^1.2.0",
+    "shortid": "^2.2.6",
+    "standard": "^7.1.2",
+    "tap-notify": "^1.0.0",
+    "tap-spec": "^4.1.1",
+    "tape": "^4.6.0"
+  },
+  "dependencies": {
+    "clone": "^1.0.2",
+    "express": "^4.14.0",
+    "socket.io": "^1.4.8",
+    "socket.io-client": "^1.4.8"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  }
+}
