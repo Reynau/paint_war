@@ -1,6 +1,7 @@
 'use strict'
 const clone = require('clone')
 const C = require('./constants.js')
+const { Player } = require('./Player.js')
 
 const IncForDir = {
   [C.RIGHT]: {i: 0, j: 1},
@@ -20,11 +21,11 @@ function cellIsBlocked (board, i, j) {
 }
 
 function isCellFromTeam (board, i, j, team) {
-  return board[i][j] / 10 === team
+  return board[i][j] && board[i][j] / 10 === team
 }
 
 function directionsAreOpposite (dir1, dir2) {
-  return dir1 !== dir2 && dir1 % 2 === dir2 % 2
+  return (dir1 + dir2 === C.UP + C.DOWN || dir1 + dir2 === C.LEFT + C.RIGHT)
 }
 
 class Turn {
@@ -44,16 +45,18 @@ class Turn {
     const { board, players } = nextTurn
     const inputs = this.inputs
     // For each player
-    players.forEach ((player, playerId) => {
+    players.forEach((player, playerId) => {
       //  Calculates movement
+      const input = inputs[playerId]
+      console.log(input)
       let nextDir = player.dir
-      if (input !== null && !directionsAreOpposite(input, player.dir)) {
+      if (input !== null && player.dir === C.STOP && !directionsAreOpposite(input, player.dir)) {
         nextDir = input
       }
       const dirInc = IncForDir[nextDir]
       //  See if is out of bounds
-      if (playerike.i + dirInc.i < 0 || playerike.i + dirInc.i >= board.length ||
-          playerike.j + dirInc.j < 0 || playerike.j + dirInc.j >= board[0].length) {
+      if (player.i + dirInc.i < 0 || player.i + dirInc.i >= board.length ||
+          player.j + dirInc.j < 0 || player.j + dirInc.j >= board[0].length) {
         player.dir = C.STOP
       } else {
         // Updating coords
@@ -64,16 +67,16 @@ class Turn {
         let i = player.i
         let j = player.j
         let team = player.team
-        if(!cellIsBlocked(board, i, j)) {
-          if(isCellFromTeam(board, team)) ++board[i][j]
-          else board[i][j] = 10*team
+        if (!cellIsBlocked(board, i, j) && player.dir !== C.STOP) {
+          if (isCellFromTeam(board, i, j, team)) ++board[i][j]
+          else board[i][j] = 10 * team
         }
       }
     })
     return nextTurn
   }
 
-  dirForPos (i, j) {
+  getInitialDir (i, j) {
     const width = this.board[0].length
     const height = this.board.length
 
@@ -94,7 +97,7 @@ class Turn {
     return dir
   }
 
-  addPlayer (playerId) {
+  addPlayer (playerId, team) {
     const width = this.board[0].length
     const height = this.board.length
 
@@ -105,9 +108,9 @@ class Turn {
       j = Math.floor(Math.random() * width)
     }
 
-    let dir = this.dirForPos(i, j)
+    let dir = this.getInitialDir(i, j)
 
-    const player = { i, j, dir}
+    const player = new Player(i, j, dir, team)
     this.players[playerId] = player
     this.board[i][j] = playerId + 1
     this.inputs[playerId] = null

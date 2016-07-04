@@ -7,4 +7,5 @@ module.exports = {
   LEFT: 2,
   UP: 3,
   STOP: 4,
+  DEATH_TIME: 10
 }
