@@ -21,7 +21,7 @@ function cellIsBlocked (board, i, j) {
 }
 
 function isCellFromTeam (board, i, j, team) {
-  return board[i][j] && board[i][j] / 10 === team
+  return parseInt(board[i][j] / 10) === team
 }
 
 function directionsAreOpposite (dir1, dir2) {
@@ -29,48 +29,83 @@ function directionsAreOpposite (dir1, dir2) {
 }
 
 class Turn {
-  constructor (board = [], players = [], inputs = []) {
+  constructor (board = [], painters = [], inputs = []) {
     this.board = board
-    this.players = players
+    this.painters = painters
     this.inputs = inputs
   }
 
   clone () {
-    const { board, players, inputs } = this
-    return new Turn(clone(board), clone(players), inputs.map(_ => null))
+    const { board, painters, inputs } = this
+    return new Turn(clone(board), clone(painters), inputs.map(_ => null))
+  }
+
+  isOutOfBounds (i, j) {
+    return i < 0 || i >= this.board.length || j < 0 || j >= this.board[0].length
+  }
+
+  thereIsAnotherPlayer (i, j) {
+    this.painters.forEach((painter) => {
+      if (painter.i === i && painter.j === j) return true
+    })
+    return false
   }
 
   evolve () {
     const nextTurn = this.clone()
-    const { board, players } = nextTurn
+    const { board, painters } = nextTurn
     const inputs = this.inputs
-    // For each player
-    players.forEach((player, playerId) => {
+
+    const battles = {}
+    // For each painter
+    painters.forEach((painter, painterId) => {
       //  Calculates movement
-      const input = inputs[playerId]
-      console.log(input)
-      let nextDir = player.dir
-      if (input !== null && player.dir === C.STOP && !directionsAreOpposite(input, player.dir)) {
+      const input = inputs[painterId]
+      let nextDir = painter.dir
+      if (input !== null && !directionsAreOpposite(input, painter.dir)) {
         nextDir = input
       }
       const dirInc = IncForDir[nextDir]
-      //  See if is out of bounds
-      if (player.i + dirInc.i < 0 || player.i + dirInc.i >= board.length ||
-          player.j + dirInc.j < 0 || player.j + dirInc.j >= board[0].length) {
-        player.dir = C.STOP
-      } else {
+      //  See if is out of bounds or there is another painter
+      let i = painter.i + dirInc.i
+      let j = painter.j + dirInc.j
+      if (this.isOutOfBounds(i, j) || this.thereIsAnotherPlayer(i, j)) painter.dir = C.STOP
+      else {
         // Updating coords
-        player.i += dirInc.i
-        player.j += dirInc.j
-        player.dir = nextDir
-        // Updating board
-        let i = player.i
-        let j = player.j
-        let team = player.team
-        if (!cellIsBlocked(board, i, j) && player.dir !== C.STOP) {
-          if (isCellFromTeam(board, i, j, team)) ++board[i][j]
-          else board[i][j] = 10 * team
-        }
+        painter.i += dirInc.i
+        painter.j += dirInc.j
+        painter.dir = nextDir
+
+        const posKey = painter.i + 'x' + painter.j
+        let battleArr = battles[posKey]
+        if (!battleArr) battleArr = battles[posKey] = []
+        battleArr.push(painterId)
+      }
+    })
+
+    for (let pos in battles) {
+      const battleArray = battles[pos]
+      if (battleArray.length < 2) continue
+      // Battle - Winner gets the new position, the rest get the old position and dir C.STOPç
+      // The losers get a number of cells back and then stun 2 turns
+      // By the moment wins the player with the minor id
+      battleArray.shift()
+      for (let pl in battleArray) {
+        let painterId = battleArray[pl]
+        let painter = nextTurn.painters[painterId]
+        painter.dir = C.STOP
+        painter.i = this.painters[painterId].i
+        painter.j = this.painters[painterId].j
+      }
+    }
+
+    painters.forEach((painter, painterId) => {
+      let i = painter.i
+      let j = painter.j
+      let team = painter.team
+      if (!cellIsBlocked(board, i, j) && painter.dir !== C.STOP) {
+        if (isCellFromTeam(board, i, j, team)) ++board[i][j]
+        else board[i][j] = 10 * team
       }
     })
     return nextTurn
@@ -97,7 +132,7 @@ class Turn {
     return dir
   }
 
-  addPlayer (playerId, team) {
+  addPlayer (painterId, team) {
     const width = this.board[0].length
     const height = this.board.length
 
@@ -110,14 +145,17 @@ class Turn {
 
     let dir = this.getInitialDir(i, j)
 
-    const player = new Player(i, j, dir, team)
-    this.players[playerId] = player
-    this.board[i][j] = playerId + 1
-    this.inputs[playerId] = null
+    const painter = new Player(i, j, dir, team)
+
+    console.log('Painter id, baseValue: ', painterId, painter.getBaseValue())
+
+    this.painters[painterId] = painter
+    this.board[i][j] = painter.getBaseValue()
+    this.inputs[painterId] = null
   }
 
-  setPlayerInput (playerId, input) {
-    this.inputs[playerId] = input
+  setPlayerInput (painterId, input) {
+    this.inputs[painterId] = input
   }
 }
 exports.Turn = Turn
