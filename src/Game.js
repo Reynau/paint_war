@@ -40,7 +40,7 @@ class Game {
   }
 
   gameShouldRestart () {
-    if (this.turns.length > 200) return true
+    if (this.turns.length >= 200) return true
     this.turn.board.forEach((row) => {
       row.forEach((col) => {
         if (col % 10 !== 4) return true
@@ -73,24 +73,15 @@ class Game {
     let playerId = this.getNewPlayerId()
     this.sockets[playerId] = socket
     this.players[socket.id] = playerId
-    let playerTeam = this.searchTeam(playerId) + 1
+    let playerTeam = 1
     if (!this.gameHasStarted() && playerTeam != null) this.turn.addPlayer(playerId, playerTeam)
     this.sendState()
   }
 
   onPlayerLeave (socket) {
-    let playerId = this.players[socket.id]
+    const playerId = this.players[socket.id]
     this.sockets[playerId] = null
-    delete this.players[socket.id]
-    this.teams.forEach((team) => {
-      team.forEach((id) => {
-        if (id === playerId) {
-          delete team[id]
-          return
-        }
-      })
-    })
-    this.sendState()
+    this.players[socket.id] = null
   }
 
   onChangeDir (socket, dir, turnIndex) {
@@ -104,7 +95,7 @@ class Game {
 
     const turn = this.turns[turnIndex]
     if (!turn) return
-    turn.setInput(playerId, dir)
+    turn.setPlayerInput(playerId, dir)
 
     let currTurn = turn
     for (let i = turnIndex + 1; i < this.turns.length; ++i) {
@@ -133,6 +124,7 @@ class Game {
         this.turns = []
       } else nextTurn = this.turn.evolve()
       this.turns.push(nextTurn)
+      console.log('Turn: ', this.turns.length)
       this.turn = nextTurn
       this.sendState()
     }

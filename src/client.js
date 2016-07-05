@@ -23,7 +23,6 @@ sendPing()
 socket.on('game:pong', (serverNow) => {
   ping = (Date.now() - sentPing) / 2
   clientLead = Date.now() - (serverNow + ping)
-  console.log({ ping, clientLead })
   setTimeout(sendPing, 500)
 })
 
@@ -50,12 +49,6 @@ socket.on('changeDir', (socketId, dir, turnIndex) => {
 
   if (socketId === `/#${socket.id}`) return
   game.onChangeDir({ id: socketId }, dir, turnIndex)
-})
-
-socket.on('chatMessage', (content) => {
-  const messageDOM = document.createElement('p')
-  messageDOM.innerHTML = escapeHTML(`Anon: ${content}`)
-  chatContainer.appendChild(messageDOM)
 })
 
 const edge = 10
