@@ -2,14 +2,15 @@ const { Turn } = require('../src/Turn.js')
 const C = require('../src/constants.js')
 
 class Game {
-  constructor ({ mapSize = 20, interval = 100 } = {}) {
-    const board = Array(mapSize).fill().map(() => Array(mapSize).fill(C.EMPTY_CELL))
+  constructor ({ size = 20, interval = 100 } = {}) {
+    const board = Array(size).fill().map(() => Array(size).fill(C.EMPTY_CELL))
     this.turn = new Turn(board, [], [])
     this.turns = [this.turn]
     this.players = {}
-    this.teams = [[], [], [], []]
     this.sockets = []
     this.interval = interval
+    this.tickAndSchedule = this.tickAndSchedule.bind(this)
+    this.teams = [[], [], [], []]
   }
 
   startInterval () {
@@ -81,6 +82,15 @@ class Game {
     let playerId = this.players[socket.id]
     this.sockets[playerId] = null
     delete this.players[socket.id]
+    this.teams.forEach((team) => {
+      team.forEach((id) => {
+        if (id === playerId) {
+          delete team[id]
+          return
+        }
+      })
+    })
+    this.sendState()
   }
 
   onChangeDir (socket, dir, turnIndex) {
@@ -110,8 +120,8 @@ class Game {
   }
 
   tick () {
-    let nextTurn
     if (this.gameHasStarted() || this.gameCanStart()) {
+      let nextTurn
       if (this.gameShouldRestart()) {
         nextTurn = new Turn()
         nextTurn.board = this.turn.board.map(row => row.map(cell => 0))
@@ -122,10 +132,10 @@ class Game {
         nextTurn.inputs = nextTurn.players.map(() => null)
         this.turns = []
       } else nextTurn = this.turn.evolve()
+      this.turns.push(nextTurn)
+      this.turn = nextTurn
+      this.sendState()
     }
-    this.turns.push(nextTurn)
-    this.turn = nextTurn
-    this.sendState()
   }
 
   sendState () {
