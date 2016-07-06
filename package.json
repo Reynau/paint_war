@@ -4,10 +4,10 @@
   "description": "",
   "main": "src/server.js",
   "scripts": {
-    "build": "browserify src/client.js -o dist/bundle.js && echo 'built!'",
+    "build": "browserify src/client.js -o dist/bundle.js && echo 'built!' && node src/server.js",
     "watch": "chokidar 'src/**/*.js' 'test/**/*.js' -c 'npm test && npm run build'",
     "test": "standard && tape test/**/*.spec.js | tap-notify | tap-spec",
-    "start": "npm i --only=dev && npm run build && node src/server.js"
+    "start": "npm i --only=dev && npm run build"
   },
   "repository": {
     "type": "git",

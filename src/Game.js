@@ -36,17 +36,14 @@ class Game {
   }
 
   gameCanStart () {
-    return this.sockets.length > 1
+    let playersConnected = 0
+    this.sockets.forEach((socket) => socket && ++playersConnected)
+    return playersConnected > 1
   }
 
   gameShouldRestart () {
-    if (this.turns.length >= 200) return true
-    this.turn.board.forEach((row) => {
-      row.forEach((col) => {
-        if (col % 10 !== 4) return true
-      })
-    })
-    return false
+    if (this.turns.length >= 50) return true
+    // Add to restart when board is full
   }
 
   getNewPlayerId () {
@@ -73,7 +70,7 @@ class Game {
     let playerId = this.getNewPlayerId()
     this.sockets[playerId] = socket
     this.players[socket.id] = playerId
-    let playerTeam = 1
+    let playerTeam = this.searchTeam(playerId) + 1
     if (!this.gameHasStarted() && playerTeam != null) this.turn.addPlayer(playerId, playerTeam)
     this.sendState()
   }
@@ -81,7 +78,7 @@ class Game {
   onPlayerLeave (socket) {
     const playerId = this.players[socket.id]
     this.sockets[playerId] = null
-    this.players[socket.id] = null
+    delete this.players[socket.id]
   }
 
   onChangeDir (socket, dir, turnIndex) {
@@ -114,13 +111,14 @@ class Game {
     if (this.gameHasStarted() || this.gameCanStart()) {
       let nextTurn
       if (this.gameShouldRestart()) {
+        this.teams = [[], [], [], []]
         nextTurn = new Turn()
         nextTurn.board = this.turn.board.map(row => row.map(cell => 0))
         this.sockets.forEach((socket, i) => {
-          if (socket) nextTurn.addPlayer(i)
-          else nextTurn.players[i] = null
+          if (socket) nextTurn.addPlayer(i, this.searchTeam(i) + 1)
+          else nextTurn.painters[i] = null
         })
-        nextTurn.inputs = nextTurn.players.map(() => null)
+        nextTurn.inputs = nextTurn.painters.map(() => null)
         this.turns = []
       } else nextTurn = this.turn.evolve()
       this.turns.push(nextTurn)

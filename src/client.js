@@ -4,8 +4,6 @@ const { Game } = require('./Game.js')
 const { Turn } = require('./Turn.js')
 const C = require('./constants.js')
 
-let debugEnabled = false
-let debugTurn = null
 const game = new Game()
 const socket = io()
 
@@ -27,12 +25,6 @@ socket.on('game:pong', (serverNow) => {
 })
 
 socket.on('game:state', (state, turnIndex) => {
-  // ignore game states unless they are for turn 0
-  if (turnIndex !== 0) {
-    debugTurn = state.turn
-    return
-  }
-
   const { board, bikes, inputs } = state.turn
   const turn = new Turn(board, bikes, inputs)
 
@@ -50,9 +42,6 @@ socket.on('changeDir', (socketId, dir, turnIndex) => {
   if (socketId === `/#${socket.id}`) return
   game.onChangeDir({ id: socketId }, dir, turnIndex)
 })
-
-const edge = 10
-const offset = 1
 
 myCanvas.width = window.innerWidth
 myCanvas.height = window.innerHeight
@@ -72,52 +61,52 @@ function loop () {
   for (let i = 0; i < turn.board.length; ++i) {
     const row = turn.board[i]
     for (let j = 0; j < row.length; ++j) {
-      paint_map_cell(turn.board, i, j)
+      paintMapCell(turn.board, i, j)
     }
   }
 }
 
-function paint_map_cell(map, x, y) {
-	var value = map[x][y]%10;
-	var team  = Math.floor(map[x][y]/10);
-	var color = Math.floor(255/4*(value+1));
-	if(color > 255) color = 255;
-	switch(team) {
-		case 0:
-			ctx.fillStyle = "rgba(127, 127, 127, 1)";
-			ctx.strokeStyle = "white";
-			break;
-		case 1:
-			ctx.fillStyle = "rgba("+color+", 0, 0, 1)";
-			ctx.strokeStyle = "white";
-			break;
-		case 2:
-			ctx.fillStyle = "rgba(0, "+color+", 0, 1)";
-			ctx.strokeStyle = "white";
-			break;
-		case 3:
-			ctx.fillStyle = "rgba(0, 0, "+color+", 1)";
-			ctx.strokeStyle = "white";
-			break;
-		case 4:
-			ctx.fillStyle = "rgba("+color+", "+color+", 0, 1)";
-			ctx.strokeStyle = "white";
-			break;
-	}
+function paintMapCell (map, x, y) {
+  var value = map[x][y] % 10
+  var team = Math.floor(map[x][y] / 10)
+  var color = Math.floor(255 / 4 * (value + 1))
+  if (color > 255) color = 255
+  switch (team) {
+    case 0:
+      ctx.fillStyle = 'rgba(127, 127, 127, 1)'
+      ctx.strokeStyle = 'white'
+      break
+    case 1:
+      ctx.fillStyle = 'rgba(' + color + ', 0, 0, 1)'
+      ctx.strokeStyle = 'white'
+      break
+    case 2:
+      ctx.fillStyle = 'rgba(0, ' + color + ', 0, 1)'
+      ctx.strokeStyle = 'white'
+      break
+    case 3:
+      ctx.fillStyle = 'rgba(0, 0, ' + color + ', 1)'
+      ctx.strokeStyle = 'white'
+      break
+    case 4:
+      ctx.fillStyle = 'rgba(' + color + ', ' + color + ', 0, 1)'
+      ctx.strokeStyle = 'white'
+      break
+  }
   let cw = 10
-	ctx.fillRect(x*cw, y*cw, cw, cw);
-	ctx.strokeRect(x*cw, y*cw, cw, cw);
-	if(value == 4) {
-		ctx.beginPath();
-		ctx.moveTo(x*cw,y*cw);
-		ctx.lineTo(x*cw+cw,y*cw+cw);
-		ctx.stroke();
+  ctx.fillRect(x * cw, y * cw, cw, cw)
+  ctx.strokeRect(x * cw, y * cw, cw, cw)
+  if (value === 4) {
+    ctx.beginPath()
+    ctx.moveTo(x * cw, y * cw)
+    ctx.lineTo(x * cw + cw, y * cw + cw)
+    ctx.stroke()
 
-		ctx.beginPath();
-		ctx.moveTo(x*cw+cw,y*cw);
-		ctx.lineTo(x*cw,y*cw+cw);
-		ctx.stroke();
-	}
+    ctx.beginPath()
+    ctx.moveTo(x * cw + cw, y * cw)
+    ctx.lineTo(x * cw, y * cw + cw)
+    ctx.stroke()
+  }
 }
 
 const KEY = {
@@ -134,11 +123,8 @@ const DIR_FOR_KEY = {
   [KEY.D]: C.RIGHT
 }
 
-const ENTER = 13
-const chatInput = document.getElementById('chatInput')
 document.addEventListener('keydown', function (e) {
-  if (e.keyCode === ENTER) return sendMessage()
-
+  console.log('Key Pressed: ', e.keyCode)
   const dir = DIR_FOR_KEY[e.keyCode]
   if (dir == null) return
   const turnIndex = game.turns.length - 1
