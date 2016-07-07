@@ -2,7 +2,7 @@ const { Turn } = require('../src/Turn.js')
 const C = require('../src/constants.js')
 
 class Game {
-  constructor ({ size = 20, interval = 100 } = {}) {
+  constructor ({ size = 20, interval = 200 } = {}) {
     const board = Array(size).fill().map(() => Array(size).fill(C.EMPTY_CELL))
     this.turn = new Turn(board, [], [])
     this.turns = [this.turn]
@@ -56,8 +56,10 @@ class Game {
     let minTeam = 9
     let minPlayers = 9
     for (let playerTeam = 0; playerTeam < 4; ++playerTeam) {
-      if (this.teams[playerTeam].length < minPlayers) {
-        minPlayers = this.teams[playerTeam].length
+      let nPlayers = 0
+      this.teams[playerTeam].forEach((playerId) => playerId != null && ++nPlayers)
+      if (nPlayers < minPlayers) {
+        minPlayers = nPlayers
         minTeam = playerTeam
       }
     }
@@ -68,27 +70,54 @@ class Game {
 
   onPlayerJoin (socket) {
     let playerId = this.getNewPlayerId()
+    let playerTeam = this.searchTeam(playerId)
+
     this.sockets[playerId] = socket
-    this.players[socket.id] = playerId
-    let playerTeam = this.searchTeam(playerId) + 1
-    if (!this.gameHasStarted() && playerTeam != null) this.turn.addPlayer(playerId, playerTeam)
-    this.sendState()
+    if(!this.gameHasStarted() && playerTeam != null) {
+      this.players[socket.id] = playerId
+      this.turn.addPlayer(playerId, playerTeam + 1)
+      this.sendState()
+    }
   }
 
   onPlayerLeave (socket) {
-    const playerId = this.players[socket.id]
-    this.sockets[playerId] = null
-    delete this.players[socket.id]
+    // Socket = null, delete player from players, update turn.removePlayer
+
+    // Trying to get the playerId => only if player is on the game
+    let playerId = this.players[socket.id]
+
+    if(playerId != undefined) {
+      let team = this.turn.painters[playerId].team - 1
+      let teamArray = this.teams[team]
+
+      this.sockets[playerId] = null
+      delete this.players[socket.id]
+      this.turn.removePlayer(playerId)
+      // Updating team array
+      for(let i = 0; i < teamArray.length; ++i) {
+        if(teamArray[i] === playerId) {
+          delete teamArray[i]
+          break
+        }
+      }
+    } else {
+      this.sockets.forEach((psocket) => {
+        if(psocket != undefined && psocket.id === socket.id) {
+          psocket = null
+        }
+      })
+    }
   }
 
   onChangeDir (socket, dir, turnIndex) {
+    const playerId = this.players[socket.id]
+    if (playerId == null) return
+
     const emitterId = socket.id
+    if (turnIndex == null) turnIndex = this.turns.length - 1
     if (typeof window === 'undefined') {
       this.sockets.forEach(socket => socket && socket.emit('changeDir', emitterId, dir, turnIndex))
     }
-
-    if (turnIndex == null) turnIndex = this.turns.length - 1
-    const playerId = this.players[socket.id]
 
     const turn = this.turns[turnIndex]
     if (!turn) return
@@ -104,27 +133,31 @@ class Game {
       currTurn = nextTurn
     }
     this.turn = currTurn
-    this.sendState()
   }
 
   tick () {
-    if (this.gameHasStarted() || this.gameCanStart()) {
-      let nextTurn
+    if (this.gameCanStart() || this.gameHasStarted()) {
       if (this.gameShouldRestart()) {
         this.teams = [[], [], [], []]
-        nextTurn = new Turn()
-        nextTurn.board = this.turn.board.map(row => row.map(cell => 0))
-        this.sockets.forEach((socket, i) => {
-          if (socket) nextTurn.addPlayer(i, this.searchTeam(i) + 1)
-          else nextTurn.painters[i] = null
+        let firstTurn = new Turn()
+        firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
+        this.sockets.forEach((socket, playerId) => {
+          let team = this.searchTeam(playerId)
+          if (socket && team != null) {
+            console.log('Restarting game...');
+            this.players[socket.id] = playerId
+            firstTurn.addPlayer(playerId, team + 1)
+          }
         })
-        nextTurn.inputs = nextTurn.painters.map(() => null)
-        this.turns = []
-      } else nextTurn = this.turn.evolve()
-      this.turns.push(nextTurn)
-      console.log('Turn: ', this.turns.length)
-      this.turn = nextTurn
-      this.sendState()
+        this.turns = [firstTurn]
+        this.turn = firstTurn
+        this.sendState()
+      } else {
+        let nextTurn = this.turn.evolve()
+        this.turns.push(nextTurn)
+        this.turn = nextTurn
+        // if (this.turns.length % C.TURNS_TO_REFRESH === 0) this.sendState()
+      }
     }
   }
 

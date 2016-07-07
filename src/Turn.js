@@ -149,9 +149,17 @@ class Turn {
 
     console.log('Painter id, baseValue: ', painterId, painter.getBaseValue())
 
-    this.painters[painterId] = painter
     this.board[i][j] = painter.getBaseValue()
+    this.painters[painterId] = painter
     this.inputs[painterId] = null
+  }
+
+  removePlayer (painterId) {
+    let player = this.painters[painterId]
+
+    this.board[player.i][player.j] = C.EMPTY_CELL
+    delete this.painters[painterId]
+    delete this.inputs[painterId]
   }
 
   setPlayerInput (painterId, input) {

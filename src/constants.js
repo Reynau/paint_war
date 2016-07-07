@@ -8,5 +8,6 @@ module.exports = {
   UP: 3,
   STOP: 4,
   DEATH_TIME: 10,
-  MAX_PLAYERS: 16
+  MAX_PLAYERS: 16,
+  TURNS_TO_REFRESH: 50
 }
