@@ -5,7 +5,7 @@ const io = require('socket.io')(http)
 const path = require('path')
 const { Game } = require('./Game.js')
 
-const game = new Game({ size: 50, interval: 100 })
+const game = new Game({ size: 50, interval: 400 })
 game.startInterval()
 
 app.use(express.static('dist'))
