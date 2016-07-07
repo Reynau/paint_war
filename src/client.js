@@ -25,8 +25,8 @@ socket.on('game:pong', (serverNow) => {
 })
 
 socket.on('game:state', (state, turnIndex) => {
-  const { board, bikes, inputs } = state.turn
-  const turn = new Turn(board, bikes, inputs)
+  const { board, painters, inputs } = state.turn
+  const turn = new Turn(board, painters, inputs)
 
   game.turn = turn
   game.turns = [turn]
@@ -54,6 +54,7 @@ function loop () {
   const now = Date.now()
   while (now - game.lastTurn >= game.interval) {
     game.tick()
+    console.log(game.turns.length - 1)
     game.lastTurn += game.interval
   }
 

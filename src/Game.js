@@ -37,7 +37,8 @@ class Game {
 
   gameCanStart () {
     let playersConnected = 0
-    this.sockets.forEach((socket) => socket && ++playersConnected)
+    this.turn.painters.forEach((painter) => painter && ++playersConnected)
+    console.log('playersConnected', playersConnected)
     return playersConnected > 1
   }
 
@@ -136,7 +137,9 @@ class Game {
   }
 
   tick () {
+    console.log('tick')
     if (this.gameCanStart() || this.gameHasStarted()) {
+      console.log('Game can start or has started')
       if (this.gameShouldRestart()) {
         this.teams = [[], [], [], []]
         let firstTurn = new Turn()
