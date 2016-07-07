@@ -43,7 +43,7 @@ class Game {
   }
 
   gameShouldRestart () {
-    if (this.turns.length >= 50) return true
+    if (this.turns.length >= 500) return true
     // Add to restart when board is full
   }
 
