@@ -95,6 +95,9 @@ function paintMapCell (map, x, y) {
       break
   }
   let cw = 10
+  let aux = x
+  x = y
+  y = aux
   ctx.fillRect(x * cw, y * cw, cw, cw)
   ctx.strokeRect(x * cw, y * cw, cw, cw)
   if (value === 4) {
