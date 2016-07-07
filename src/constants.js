@@ -1,6 +1,7 @@
 'use strict'
 
 module.exports = {
+  CELL_WIDTH: 10,
   EMPTY_CELL: 0,
   RIGHT: 0,
   DOWN: 1,

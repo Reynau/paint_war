@@ -24,10 +24,6 @@ function isCellFromTeam (board, i, j, team) {
   return parseInt(board[i][j] / 10) === team
 }
 
-function directionsAreOpposite (dir1, dir2) {
-  return (dir1 + dir2 === C.UP + C.DOWN || dir1 + dir2 === C.LEFT + C.RIGHT)
-}
-
 class Turn {
   constructor (board = [], painters = [], inputs = []) {
     this.board = board
@@ -63,7 +59,7 @@ class Turn {
       //  Calculates movement
       const input = inputs[painterId]
       let nextDir = painter.dir
-      if (input !== null && !directionsAreOpposite(input, painter.dir)) {
+      if (input !== null) {
         nextDir = input
       }
       const dirInc = IncForDir[nextDir]

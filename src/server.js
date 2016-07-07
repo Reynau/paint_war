@@ -21,8 +21,9 @@ io.on('connection', function (socket) {
   console.log(`${socket.id} connected`)
   game.onPlayerJoin(socket)
 
-  socket.on('changeDir', function (dir, turnIndex) {
-    game.onChangeDir(socket, dir, turnIndex)
+  socket.on('changeDir', function (socketId, dir, turnIndex) {
+    console.log('changeDir received.', socketId, dir, turnIndex)
+    game.onChangeDir(socketId, dir, turnIndex)
   })
 
   socket.on('disconnect', function () {

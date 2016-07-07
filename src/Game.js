@@ -38,7 +38,6 @@ class Game {
   gameCanStart () {
     let playersConnected = 0
     this.turn.painters.forEach((painter) => painter && ++playersConnected)
-    console.log('playersConnected', playersConnected)
     return playersConnected > 1
   }
 
@@ -68,7 +67,7 @@ class Game {
     this.teams[minTeam].push(playerId)
     return minTeam
   }
-
+  
   onPlayerJoin (socket) {
     let playerId = this.getNewPlayerId()
     let playerTeam = this.searchTeam(playerId)
@@ -110,19 +109,19 @@ class Game {
     }
   }
 
-  onChangeDir (socket, dir, turnIndex) {
-    const playerId = this.players[socket.id]
+  onChangeDir (socketId, dir, turnIndex) {
+    const playerId = this.players[socketId]
     if (playerId == null) return
 
-    const emitterId = socket.id
+    const emitterId = socketId
     if (turnIndex == null) turnIndex = this.turns.length - 1
     if (typeof window === 'undefined') {
       this.sockets.forEach(socket => socket && socket.emit('changeDir', emitterId, dir, turnIndex))
     }
-
     const turn = this.turns[turnIndex]
     if (!turn) return
     turn.setPlayerInput(playerId, dir)
+    console.log(turn.painters[playerId].dir)
 
     let currTurn = turn
     for (let i = turnIndex + 1; i < this.turns.length; ++i) {
@@ -137,9 +136,7 @@ class Game {
   }
 
   tick () {
-    console.log('tick')
     if (this.gameCanStart() || this.gameHasStarted()) {
-      console.log('Game can start or has started')
       if (this.gameShouldRestart()) {
         this.teams = [[], [], [], []]
         let firstTurn = new Turn()
