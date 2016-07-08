@@ -39,6 +39,7 @@ socket.on('changeDir', (socketId, dir, turnIndex) => {
   // don't apply your own input changes, may cause render flicker when
   // multiple input changes were sent in the same turn
 
+  console.log(socketId, dir, turnIndex)
   if (socketId === `/#${socket.id}`) return
   game.onChangeDir({ id: socketId }, dir, turnIndex)
 })
