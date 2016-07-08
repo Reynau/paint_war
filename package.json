@@ -4,9 +4,9 @@
   "description": "",
   "main": "src/server.js",
   "scripts": {
-    "build": "standard && browserify src/client.js -o dist/bundle.js && echo 'built!'",
+    "build": "browserify src/client.js -o dist/bundle.js && echo 'built!'",
     "watch": "chokidar 'src/**/*.js' 'test/**/*.js' -c 'clear; npm test --silent && npm run build --silent'",
-    "test": "standard && tape test/**/*.spec.js | tap-notify | tap-spec",
+    "test": "standard",
     "start": "npm run build && node src/server.js"
   },
   "repository": {
