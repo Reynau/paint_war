@@ -8,7 +8,7 @@ class Game {
     this.turns = [this.turn]
     this.players = {}
     this.sockets = []
-    this.interval = interval
+    this.interval = 400
     this.tickAndSchedule = this.tickAndSchedule.bind(this)
     this.teams = [[], [], [], []]
   }
@@ -73,7 +73,7 @@ class Game {
     let playerTeam = this.searchTeam(playerId)
 
     this.sockets[playerId] = socket
-    if(!this.gameHasStarted() && playerTeam != null) {
+    if (!this.gameHasStarted() && playerTeam != null) {
       this.players[socket.id] = playerId
       this.turn.addPlayer(playerId, playerTeam + 1)
       this.sendState()
@@ -86,7 +86,7 @@ class Game {
     // Trying to get the playerId => only if player is on the game
     let playerId = this.players[socket.id]
 
-    if(playerId != undefined) {
+    if (playerId != null) {
       let team = this.turn.painters[playerId].team - 1
       let teamArray = this.teams[team]
 
@@ -94,15 +94,15 @@ class Game {
       delete this.players[socket.id]
       this.turn.removePlayer(playerId)
       // Updating team array
-      for(let i = 0; i < teamArray.length; ++i) {
-        if(teamArray[i] === playerId) {
+      for (let i = 0; i < teamArray.length; ++i) {
+        if (teamArray[i] === playerId) {
           delete teamArray[i]
           break
         }
       }
     } else {
       this.sockets.forEach((psocket) => {
-        if(psocket != undefined && psocket.id === socket.id) {
+        if (psocket != null && psocket.id === socket.id) {
           psocket = null
         }
       })
@@ -112,6 +112,8 @@ class Game {
   onChangeDir (socket, dir, turnIndex) {
     const playerId = this.players[socket.id]
     if (playerId == null) return
+    console.log('onChangeDir playerId:', playerId)
+    console.log('onChangeDir turnIndex:', turnIndex)
 
     const emitterId = socket.id
     if (turnIndex == null) turnIndex = this.turns.length - 1
@@ -119,7 +121,11 @@ class Game {
       this.sockets.forEach(socket => socket && socket.emit('changeDir', emitterId, dir, turnIndex))
     }
 
+    console.log(this.turns.length)
     const turn = this.turns[turnIndex]
+    console.log('onChangeDir turn state:', turn)
+    console.log('onChangeDir game.turns state:', this.turns)
+    console.log('game from onChangeDir:', this)
     if (!turn) return
     turn.setPlayerInput(playerId, dir)
 

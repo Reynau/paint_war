@@ -59,7 +59,7 @@ class Turn {
     const battles = {}
     // For each painter
     painters.forEach((painter, painterId) => {
-      if(painter == null) return
+      if (painter == null) return
       //  Calculates movement
       const input = inputs[painterId]
       let nextDir = painter.dir

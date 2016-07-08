@@ -25,6 +25,7 @@ socket.on('game:pong', (serverNow) => {
 })
 
 socket.on('game:state', (state, turnIndex) => {
+  console.log('GAME STATE RECEIVED')
   const { board, painters, inputs } = state.turn
   const turn = new Turn(board, painters, inputs)
 
@@ -39,8 +40,9 @@ socket.on('changeDir', (socketId, dir, turnIndex) => {
   // don't apply your own input changes, may cause render flicker when
   // multiple input changes were sent in the same turn
 
-  console.log(socketId, dir, turnIndex)
+  console.log('changeDir received', socketId, dir, turnIndex)
   if (socketId === `/#${socket.id}`) return
+  console.log('Game State:', game)
   game.onChangeDir({ id: socketId }, dir, turnIndex)
 })
 
@@ -55,7 +57,6 @@ function loop () {
   const now = Date.now()
   while (now - game.lastTurn >= game.interval) {
     game.tick()
-    console.log(game.turns.length - 1)
     game.lastTurn += game.interval
   }
 
@@ -66,6 +67,31 @@ function loop () {
       paintMapCell(turn.board, i, j)
     }
   }
+  game.turn.painters.forEach((painter) => paintPlayer(game.board, painter.i, painter.j, painter.team))
+}
+
+function paintPlayer (board, i, j, team) {
+  let cw = C.CELL_WIDTH
+  let r = cw / 2
+  switch (team) {
+    case 1:
+      ctx.fillStyle = 'rgba(255, 0, 0, 1)'
+      break
+    case 2:
+      ctx.fillStyle = 'rgba(0, 255, 0, 1)'
+      break
+    case 3:
+      ctx.fillStyle = 'rgba(0, 0, 255, 1)'
+      break
+    case 4:
+      ctx.fillStyle = 'rgba(255, 255, 0, 1)'
+      break
+  }
+  ctx.beginPath()
+  ctx.arc(j * cw + r, i * cw + r, r, 0, 2 * Math.PI, false)
+  ctx.strokeStyle = 'white'
+  ctx.fill()
+  ctx.stroke()
 }
 
 function paintMapCell (map, x, y) {
@@ -95,7 +121,7 @@ function paintMapCell (map, x, y) {
       ctx.strokeStyle = 'white'
       break
   }
-  let cw = 10
+  let cw = C.CELL_WIDTH
   let aux = x
   x = y
   y = aux
@@ -129,11 +155,10 @@ const DIR_FOR_KEY = {
 }
 
 document.addEventListener('keydown', function (e) {
-  console.log('Key Pressed: ', e.keyCode)
   const dir = DIR_FOR_KEY[e.keyCode]
   if (dir == null) return
   const turnIndex = game.turns.length - 1
-  console.log('TurnIndex: ', turnIndex)
   game.onChangeDir({ id: `/#${socket.id}` }, dir, turnIndex)
   socket.emit('changeDir', dir, turnIndex)
+  console.log('changeDir send', socket.id, dir, turnIndex)
 })
