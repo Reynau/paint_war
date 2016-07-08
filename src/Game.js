@@ -8,7 +8,7 @@ class Game {
     this.turns = [this.turn]
     this.players = {}
     this.sockets = []
-    this.interval = 400
+    this.interval = interval
     this.tickAndSchedule = this.tickAndSchedule.bind(this)
     this.teams = [[], [], [], []]
   }
@@ -24,6 +24,7 @@ class Game {
     while (now - this.lastTurn >= this.interval) {
       this.lastTurn += this.interval
       this.tick()
+      // asda
       now = Date.now()
     }
 
