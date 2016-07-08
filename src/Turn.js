@@ -107,6 +107,7 @@ class Turn {
       if (!cellIsBlocked(board, i, j) && painter.dir !== C.STOP) {
         if (isCellFromTeam(board, i, j, team)) ++board[i][j]
         else board[i][j] = 10 * team
+        ++painter.points
       }
     })
     return nextTurn
