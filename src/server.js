@@ -17,6 +17,11 @@ app.get('/test', function (req, res) {
   res.send('testerino')
 })
 
+app.get('/restart', function (req, res) {
+  game.restart()
+  game.sockets.forEach((socket) => socket && socket.emit('game:restart'))
+})
+
 io.on('connection', function (socket) {
   console.log(`${socket.id} connected`)
   game.onPlayerJoin(socket)

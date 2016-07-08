@@ -36,6 +36,8 @@ socket.on('game:state', (state, turnIndex) => {
   game.lastTurn = state.timestamp + clientLead
 })
 
+socket.on('game:restart', () => game.restart())
+
 socket.on('changeDir', (socketId, dir, turnIndex) => {
   // don't apply your own input changes, may cause render flicker when
   // multiple input changes were sent in the same turn

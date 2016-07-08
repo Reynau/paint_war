@@ -24,7 +24,6 @@ class Game {
     while (now - this.lastTurn >= this.interval) {
       this.lastTurn += this.interval
       this.tick()
-      // asda
       now = Date.now()
     }
 
@@ -144,27 +143,30 @@ class Game {
 
   tick () {
     if (this.gameCanStart() || this.gameHasStarted()) {
-      if (this.gameShouldRestart()) {
-        this.teams = [[], [], [], []]
-        let firstTurn = new Turn()
-        firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
-        this.sockets.forEach((socket, playerId) => {
-          let team = this.searchTeam(playerId)
-          if (socket && team != null) {
-            this.players[socket.id] = playerId
-            firstTurn.addPlayer(playerId, team + 1)
-          }
-        })
-        this.turns = [firstTurn]
-        this.turn = firstTurn
-        this.sendState()
-      } else {
+      if (this.gameShouldRestart()) this.restart()
+      else {
         let nextTurn = this.turn.evolve()
         this.turns.push(nextTurn)
         this.turn = nextTurn
         // if (this.turns.length % C.TURNS_TO_REFRESH === 0) this.sendState()
       }
     }
+  }
+
+  restart () {
+    this.teams = [[], [], [], []]
+    let firstTurn = new Turn()
+    firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
+    this.sockets.forEach((socket, playerId) => {
+      let team = this.searchTeam(playerId)
+      if (socket && team != null) {
+        this.players[socket.id] = playerId
+        firstTurn.addPlayer(playerId, team + 1)
+      }
+    })
+    this.turns = [firstTurn]
+    this.turn = firstTurn
+    this.sendState()
   }
 
   sendState () {
