@@ -148,8 +148,6 @@ class Turn {
 
     const painter = new Player(i, j, dir, team)
 
-    console.log('Painter id, baseValue: ', painterId, painter.getBaseValue())
-
     this.board[i][j] = painter.getBaseValue()
     this.painters[painterId] = painter
     this.inputs[painterId] = null

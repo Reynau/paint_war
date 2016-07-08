@@ -112,8 +112,6 @@ class Game {
   onChangeDir (socket, dir, turnIndex) {
     const playerId = this.players[socket.id]
     if (playerId == null) return
-    console.log('onChangeDir playerId:', playerId)
-    console.log('onChangeDir turnIndex:', turnIndex)
 
     const emitterId = socket.id
     if (turnIndex == null) turnIndex = this.turns.length - 1
@@ -121,11 +119,8 @@ class Game {
       this.sockets.forEach(socket => socket && socket.emit('changeDir', emitterId, dir, turnIndex))
     }
 
-    console.log(this.turns.length)
     const turn = this.turns[turnIndex]
-    console.log('onChangeDir turn state:', turn)
-    console.log('onChangeDir game.turns state:', this.turns)
-    console.log('game from onChangeDir:', this)
+    
     if (!turn) return
     turn.setPlayerInput(playerId, dir)
 
