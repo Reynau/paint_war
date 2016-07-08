@@ -63,7 +63,7 @@ class Turn {
       //  Calculates movement
       const input = inputs[painterId]
       let nextDir = painter.dir
-      if (input !== null && !directionsAreOpposite(input, painter.dir)) {
+      if (input !== null) {
         nextDir = input
       }
       const dirInc = IncForDir[nextDir]
