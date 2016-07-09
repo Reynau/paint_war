@@ -59,10 +59,11 @@ class Turn {
     const battles = {}
     // For each painter
     painters.forEach((painter, painterId) => {
+      if (painter == null) return
       //  Calculates movement
       const input = inputs[painterId]
       let nextDir = painter.dir
-      if (input !== null && !directionsAreOpposite(input, painter.dir)) {
+      if (input !== null) {
         nextDir = input
       }
       const dirInc = IncForDir[nextDir]
@@ -106,6 +107,7 @@ class Turn {
       if (!cellIsBlocked(board, i, j) && painter.dir !== C.STOP) {
         if (isCellFromTeam(board, i, j, team)) ++board[i][j]
         else board[i][j] = 10 * team
+        ++painter.points
       }
     })
     return nextTurn

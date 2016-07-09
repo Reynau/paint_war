@@ -73,7 +73,7 @@ class Game {
     let playerTeam = this.searchTeam(playerId)
 
     this.sockets[playerId] = socket
-    if(!this.gameHasStarted() && playerTeam != null) {
+    if (!this.gameHasStarted() && playerTeam != null) {
       this.players[socket.id] = playerId
       this.turn.addPlayer(playerId, playerTeam + 1)
       this.sendState()
@@ -86,7 +86,7 @@ class Game {
     // Trying to get the playerId => only if player is on the game
     let playerId = this.players[socket.id]
 
-    if(playerId != undefined) {
+    if (playerId != null) {
       let team = this.turn.painters[playerId].team - 1
       let teamArray = this.teams[team]
 
@@ -94,15 +94,15 @@ class Game {
       delete this.players[socket.id]
       this.turn.removePlayer(playerId)
       // Updating team array
-      for(let i = 0; i < teamArray.length; ++i) {
-        if(teamArray[i] === playerId) {
+      for (let i = 0; i < teamArray.length; ++i) {
+        if (teamArray[i] === playerId) {
           delete teamArray[i]
           break
         }
       }
     } else {
       this.sockets.forEach((psocket) => {
-        if(psocket != undefined && psocket.id === socket.id) {
+        if (psocket != null && psocket.id === socket.id) {
           psocket = null
         }
       })
@@ -120,6 +120,7 @@ class Game {
     }
 
     const turn = this.turns[turnIndex]
+    
     if (!turn) return
     turn.setPlayerInput(playerId, dir)
 
@@ -137,27 +138,30 @@ class Game {
 
   tick () {
     if (this.gameCanStart() || this.gameHasStarted()) {
-      if (this.gameShouldRestart()) {
-        this.teams = [[], [], [], []]
-        let firstTurn = new Turn()
-        firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
-        this.sockets.forEach((socket, playerId) => {
-          let team = this.searchTeam(playerId)
-          if (socket && team != null) {
-            this.players[socket.id] = playerId
-            firstTurn.addPlayer(playerId, team + 1)
-          }
-        })
-        this.turns = [firstTurn]
-        this.turn = firstTurn
-        this.sendState()
-      } else {
+      if (this.gameShouldRestart()) this.restart()
+      else {
         let nextTurn = this.turn.evolve()
         this.turns.push(nextTurn)
         this.turn = nextTurn
         // if (this.turns.length % C.TURNS_TO_REFRESH === 0) this.sendState()
       }
     }
+  }
+
+  restart () {
+    this.teams = [[], [], [], []]
+    let firstTurn = new Turn()
+    firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
+    this.sockets.forEach((socket, playerId) => {
+      let team = this.searchTeam(playerId)
+      if (socket && team != null) {
+        this.players[socket.id] = playerId
+        firstTurn.addPlayer(playerId, team + 1)
+      }
+    })
+    this.turns = [firstTurn]
+    this.turn = firstTurn
+    this.sendState()
   }
 
   sendState () {

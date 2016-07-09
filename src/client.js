@@ -25,6 +25,7 @@ socket.on('game:pong', (serverNow) => {
 })
 
 socket.on('game:state', (state, turnIndex) => {
+  console.log('GAME STATE RECEIVED')
   const { board, painters, inputs } = state.turn
   const turn = new Turn(board, painters, inputs)
 
@@ -35,11 +36,15 @@ socket.on('game:state', (state, turnIndex) => {
   game.lastTurn = state.timestamp + clientLead
 })
 
+socket.on('game:restart', () => game.restart())
+
 socket.on('changeDir', (socketId, dir, turnIndex) => {
   // don't apply your own input changes, may cause render flicker when
   // multiple input changes were sent in the same turn
 
+  console.log('changeDir received', socketId, dir, turnIndex)
   if (socketId === `/#${socket.id}`) return
+  console.log('Game State:', game)
   game.onChangeDir({ id: socketId }, dir, turnIndex)
 })
 
@@ -65,15 +70,12 @@ function loop () {
     }
   }
 
-  game.turn.painters.forEach((painter) => paintPainter(painter.i, painter.j, painter.team))
+  game.turn.painters.forEach((painter) => paintPlayer(game.board, painter.i, painter.j, painter.team))
 }
 
-function paintPainter (y, x, team) {
+function paintPlayer (board, i, j, team) {
   let cw = C.CELL_WIDTH
-  let r = C.CELL_WIDTH / 2
-  ctx.beginPath()
-  ctx.arc(x * cw + r, y * cw + r, r, 0, 2 * Math.PI, false);
-  ctx.strokeStyle = 'white'
+  let r = cw / 2
   switch (team) {
     case 1:
       ctx.fillStyle = 'rgba(255, 0, 0, 1)'
@@ -88,6 +90,9 @@ function paintPainter (y, x, team) {
       ctx.fillStyle = 'rgba(255, 255, 0, 1)'
       break
   }
+  ctx.beginPath()
+  ctx.arc(j * cw + r, i * cw + r, r, 0, 2 * Math.PI, false)
+  ctx.strokeStyle = 'white'
   ctx.fill()
   ctx.stroke()
 }
@@ -119,7 +124,7 @@ function paintMapCell (map, x, y) {
       ctx.strokeStyle = 'white'
       break
   }
-  let cw = 10
+  let cw = C.CELL_WIDTH
   let aux = x
   x = y
   y = aux
@@ -158,4 +163,5 @@ document.addEventListener('keydown', function (e) {
   const turnIndex = game.turns.length - 1
   game.onChangeDir({ id: `/#${socket.id}` }, dir, turnIndex)
   socket.emit('changeDir', dir, turnIndex)
+  console.log('changeDir send', socket.id, dir, turnIndex)
 })
