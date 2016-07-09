@@ -13,10 +13,6 @@ app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname, '../dist/', 'index.html'))
 })
 
-app.get('/test', function (req, res) {
-  res.send('testerino')
-})
-
 app.get('/restart', function (req, res) {
   console.log('Restart received')
   game.restart()
@@ -29,6 +25,7 @@ io.on('connection', function (socket) {
 
   socket.on('changeDir', function (dir, turnIndex) {
     game.onChangeDir(socket, dir, turnIndex)
+    game.sockets.forEach(gsocket => gsocket && gsocket.emit('changeDir', socket.id, dir, turnIndex))
   })
 
   socket.on('disconnect', function () {

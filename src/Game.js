@@ -42,7 +42,7 @@ class Game {
   }
 
   gameShouldRestart () {
-    if (this.turns.length >= 500) return true
+    if (this.turns.length >= C.TURNS_TO_RESTART) return true
     // Add to restart when board is full
   }
 
@@ -115,9 +115,6 @@ class Game {
 
     const emitterId = socket.id
     if (turnIndex == null) turnIndex = this.turns.length - 1
-    if (typeof window === 'undefined') {
-      this.sockets.forEach(socket => socket && socket.emit('changeDir', emitterId, dir, turnIndex))
-    }
 
     const turn = this.turns[turnIndex]
     
@@ -143,7 +140,8 @@ class Game {
         let nextTurn = this.turn.evolve()
         this.turns.push(nextTurn)
         this.turn = nextTurn
-        // if (this.turns.length % C.TURNS_TO_REFRESH === 0) this.sendState()
+        let turns = this.turns.length
+        //if (this.imServer() && turns % C.TURNS_TO_REFRESH === 0) this.sendState()
       }
     }
   }
@@ -178,6 +176,10 @@ class Game {
     this.sockets.forEach((socket) => {
       if (socket) socket.emit('game:state', state, turnIndex)
     })
+  }
+
+  imServer () {
+    return (typeof window === 'undefined')
   }
 }
 exports.Game = Game

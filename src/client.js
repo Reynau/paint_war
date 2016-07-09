@@ -25,7 +25,7 @@ socket.on('game:pong', (serverNow) => {
 })
 
 socket.on('game:state', (state, turnIndex) => {
-  console.log('GAME STATE RECEIVED')
+  console.log('Game State received')
   const { board, painters, inputs } = state.turn
   const turn = new Turn(board, painters, inputs)
 
@@ -44,7 +44,6 @@ socket.on('changeDir', (socketId, dir, turnIndex) => {
 
   console.log('changeDir received', socketId, dir, turnIndex)
   if (socketId === `/#${socket.id}`) return
-  console.log('Game State:', game)
   game.onChangeDir({ id: socketId }, dir, turnIndex)
 })
 
@@ -71,6 +70,13 @@ function loop () {
   }
 
   game.turn.painters.forEach((painter) => paintPlayer(game.board, painter.i, painter.j, painter.team))
+  paintPing()
+}
+
+function paintPing () {
+  ctx.fillStyle = "black";
+  ctx.font = "10px Lucida Console";
+  ctx.fillText(ping, 10, 10);
 }
 
 function paintPlayer (board, i, j, team) {
