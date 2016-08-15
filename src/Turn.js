@@ -24,6 +24,10 @@ function isCellFromTeam (board, i, j, team) {
   return parseInt(board[i][j] / 10) === team
 }
 
+function fixedCellFromTeam (board, i, j, team) {
+  return (cellIsBlocked(board, i, j) && isCellFromTeam(board, i, j, team))
+}
+
 function directionsAreOpposite (dir1, dir2) {
   return (dir1 + dir2 === C.UP + C.DOWN || dir1 + dir2 === C.LEFT + C.RIGHT)
 }
@@ -105,12 +109,103 @@ class Turn {
       let j = painter.j
       let team = painter.team
       if (!cellIsBlocked(board, i, j) && painter.dir !== C.STOP) {
-        if (isCellFromTeam(board, i, j, team)) ++board[i][j]
-        else board[i][j] = 10 * team
-        ++painter.points
+        if (isCellFromTeam(board, i, j, team)) {
+          ++board[i][j]
+          ++painter.points
+          if (fixedCellFromTeam(board, i, j, team)) {
+            this.searchNearForAreas(board, team, i, j)
+          }
+        }
+        else {
+          board[i][j] = 10 * team
+        }
       }
     })
     return nextTurn
+  }
+
+  paintArea (board, team, i, j) {
+    if(this.isOutOfBounds(i, j)) return
+    if(cellIsBlocked(board, i, j)) return
+
+    board[i][j] = team * 10 + 4
+
+    this.paintArea (board, team, i + 1, j)
+    this.paintArea (board, team, i - 1, j)
+    this.paintArea (board, team, i, j + 1)
+    this.paintArea (board, team, i, j - 1)
+  }
+
+  // Take the position player blocked and search areas in the 4 possible directions
+  searchNearForAreas (board, team, i, j) {
+    console.log('Searching for near areas to ', i, j, 'value ', board[i][j])
+    let size = board.length
+    let auxBoard = Array(size).fill().map(() => Array(size).fill(0))
+    let points = 0
+
+    if(!this.isOutOfBounds(i + 1, j) && auxBoard[i + 1][j] === 0) {
+      // Search into an area
+      let a = this.searchArea(board, 1, auxBoard, team, i + 1, j)
+      console.log('a = ', a)
+      // If value is bigger than 0 means that is a closen area
+      if(a > 0) {
+        console.log('Right: a > 0')
+        this.paintArea(board, team, i + 1, j)
+        points += 5 * a
+      }
+    }
+    if(!this.isOutOfBounds(i, j + 1) && auxBoard[i][j + 1] === 0){
+      let c = this.searchArea(board, 2, auxBoard, team, i, j + 1)
+      console.log('c = ', c)
+      if(c > 0) {
+        console.log('Down: c > 0')
+        this.paintArea(board, team, i, j + 1)
+        points += 5 * c
+      }
+    }
+    if(!this.isOutOfBounds(i - 1, j) && auxBoard[i - 1][j] === 0) {
+      let b = this.searchArea(board, 3, auxBoard, team, i - 1, j)
+      console.log('Left: b = ', b)
+      if(b > 0) {
+        console.log('b > 0')
+        this.paintArea(board, team, i - 1, j)
+        points += 5 * b
+      }
+    }
+    if(!this.isOutOfBounds(i, j - 1) && auxBoard[i][j - 1] === 0) {
+      let d = this.searchArea(board, -1, auxBoard, team, i, j - 1)
+      console.log('Up: d = ', d)
+      if(d > 0) {
+        console.log('d > 0')
+        this.paintArea(board, team, i, j - 1)
+        points += 5 * d
+      }
+    }
+    return points
+  }
+
+  searchArea (board, value, auxBoard, team, i, j) {
+    if (this.isOutOfBounds(i,j)) return -1
+    if (fixedCellFromTeam(board, i, j, team)) return 0
+    if (auxBoard[i][j] == value) return 1
+    if (auxBoard[i][j] != 0) return 0 // Case that the position was already visited
+
+    // Assigns the value to the position
+    auxBoard[i][j] = value
+
+    // Starts the recursive search
+    let a = this.searchArea(board, value, auxBoard, team, i + 1, j)
+    if(a === -1) return -1
+    let c = this.searchArea(board, value, auxBoard, team, i, j + 1)
+    if(c === -1) return -1
+    let b = this.searchArea(board, value, auxBoard, team, i - 1, j)
+    if(b === -1) return -1
+    let d = this.searchArea(board, value, auxBoard, team, i, j - 1)
+    if(d === -1) return -1
+
+    // In case that any search returned -1, we add all the results to get the number
+    // of positions fixed
+    return a + b + c + d + 1
   }
 
   getInitialDir (i, j) {
