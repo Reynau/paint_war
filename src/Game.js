@@ -71,11 +71,12 @@ class Game {
   onPlayerJoin (socket) {
     let playerId = this.getNewPlayerId()
     let playerTeam = this.searchTeam(playerId)
+    let playerName = 'Player ' + playerId
 
     this.sockets[playerId] = socket
     if (!this.gameHasStarted() && playerTeam != null) {
       this.players[socket.id] = playerId
-      this.turn.addPlayer(playerId, playerTeam + 1)
+      this.turn.addPlayer(playerId, playerTeam + 1, playerName)
       this.sendState()
     }
   }
@@ -117,7 +118,7 @@ class Game {
     if (turnIndex == null) turnIndex = this.turns.length - 1
 
     const turn = this.turns[turnIndex]
-    
+
     if (!turn) return
     turn.setPlayerInput(playerId, dir)
 
@@ -154,7 +155,8 @@ class Game {
       let team = this.searchTeam(playerId)
       if (socket && team != null) {
         this.players[socket.id] = playerId
-        firstTurn.addPlayer(playerId, team + 1)
+        let playerName = 'Player ' + playerId
+        firstTurn.addPlayer(playerId, team + 1, playerName)
       }
     })
     this.turns = [firstTurn]

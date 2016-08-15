@@ -9,6 +9,7 @@ const socket = io()
 
 let sentPing
 let ping = ''
+let fps = ''
 // client's Date.now() - server's Date.now()
 let clientLead = 0
 
@@ -56,10 +57,15 @@ function loop () {
   requestAnimationFrame(loop)
 
   const now = Date.now()
+  let time_passed = (now - game.lastTurn) / 1000
+  let frames = 1
   while (now - game.lastTurn >= game.interval) {
     game.tick()
     game.lastTurn += game.interval
+    ++frames
   }
+  console.log(time_passed)
+  if(time_passed > 0.1) fps = Math.round(frames / time_passed)
 
   const turn = game.turn
   for (let i = 0; i < turn.board.length; ++i) {
@@ -70,13 +76,43 @@ function loop () {
   }
 
   game.turn.painters.forEach((painter) => paintPlayer(game.board, painter.i, painter.j, painter.team))
+
+  paintHUD()
+}
+
+function paintHUD () {
   paintPing()
+  paintFPS()
+  paintPlayersInfo()
+}
+
+function paintPlayersInfo () {
+  ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+  ctx.fillRect(520, 30, 100, 250)
+  ctx.fillStyle = "black";
+  ctx.font = "10px Lucida Console";
+  ctx.fillText('List of players:', 525, 40);
+  let players = game.turn.painters
+  for(let i = 0; i < players.length; ++i) {
+    let name = players[i].name
+    ctx.fillText('- ' + name, 530, 55 + i * 12);
+  }
+}
+
+function paintFPS () {
+  ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+  ctx.fillRect(520, 15, 60, 15)
+  ctx.fillStyle = "black";
+  ctx.font = "10px Lucida Console";
+  ctx.fillText('FPS: ' + fps, 525, 25);
 }
 
 function paintPing () {
+  ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+  ctx.fillRect(520, 0, 80, 15)
   ctx.fillStyle = "black";
   ctx.font = "10px Lucida Console";
-  ctx.fillText(ping, 10, 10);
+  ctx.fillText('Ping: ' + ping, 525, 10);
 }
 
 function paintPlayer (board, i, j, team) {

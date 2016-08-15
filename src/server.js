@@ -15,8 +15,8 @@ app.get('/', function (req, res) {
 
 app.get('/restart', function (req, res) {
   console.log('Restart received')
-  game.restart()
   game.sockets.forEach((socket) => socket && socket.emit('game:restart'))
+  game.restart()
 })
 
 io.on('connection', function (socket) {

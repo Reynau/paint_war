@@ -229,7 +229,7 @@ class Turn {
     return dir
   }
 
-  addPlayer (painterId, team) {
+  addPlayer (painterId, team, name) {
     const width = this.board[0].length
     const height = this.board.length
 
@@ -242,7 +242,7 @@ class Turn {
 
     let dir = this.getInitialDir(i, j)
 
-    const painter = new Player(i, j, dir, team)
+    const painter = new Player(i, j, dir, team, name)
 
     this.board[i][j] = painter.getBaseValue()
     this.painters[painterId] = painter
