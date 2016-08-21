@@ -2,37 +2,44 @@ const { Turn } = require('../src/Turn.js')
 const C = require('../src/constants.js')
 
 class Game {
+
   constructor ({ size = 20, interval = 200 } = {}) {
     const board = Array(size).fill().map(() => Array(size).fill(C.EMPTY_CELL))
+    this.state = C.GAME_NOT_STARTED
     this.turn = new Turn(board, [], [])
     this.turns = [this.turn]
     this.players = {}
     this.sockets = []
     this.interval = interval
-    this.tickAndSchedule = this.tickAndSchedule.bind(this)
+    this.gameLoop = this.gameLoop.bind(this)
     this.teams = [[], [], [], []]
   }
 
   startInterval () {
+    this.startTime = Date.now()
     this.lastTurn = Date.now()
-    setTimeout(this.tickAndSchedule, this.interval)
+    setTimeout(this.gameLoop, this.interval)
   }
 
-  tickAndSchedule () {
+  gameLoop () {
     let now = Date.now()
-
+    if(this.startTime - now >= C.TIME_TO_RESTART) {
+      this.restart()
+      return
+    }
     while (now - this.lastTurn >= this.interval) {
       this.lastTurn += this.interval
       this.tick()
       now = Date.now()
     }
 
-    setTimeout(this.tickAndSchedule,
-      this.lastTurn + this.interval - now)
+    let timeout_time = this.lastTurn + this.interval - now
+    setTimeout(this.gameLoop,timeout_time)
   }
 
   gameHasStarted () {
-    return this.turns.length > 1
+    return this.state
+    //return this.turns.length > 1
   }
 
   gameCanStart () {
@@ -42,7 +49,11 @@ class Game {
   }
 
   gameShouldRestart () {
-    if (this.turns.length >= C.TURNS_TO_RESTART) return true
+    let startTime = this.startTime
+    let time = (Date.now() - startTime) / 1000
+    let minutes = Math.floor(time / 60)
+    if (minutes >= C.TIME_TO_RESTART) return true
+    return false
     // Add to restart when board is full
   }
 
@@ -135,7 +146,7 @@ class Game {
   }
 
   tick () {
-    if (this.gameCanStart() || this.gameHasStarted()) {
+    if (this.gameHasStarted()) {
       if (this.gameShouldRestart()) this.restart()
       else {
         let nextTurn = this.turn.evolve()
@@ -147,8 +158,14 @@ class Game {
     }
   }
 
+  start () {
+    this.state = C.GAME_STARTED
+    this.startTime = Date.now()
+  }
+
   restart () {
     this.teams = [[], [], [], []]
+    this.startTime = Date.now()
     let firstTurn = new Turn()
     firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
     this.sockets.forEach((socket, playerId) => {

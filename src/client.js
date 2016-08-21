@@ -37,6 +37,8 @@ socket.on('game:state', (state, turnIndex) => {
   game.lastTurn = state.timestamp + clientLead
 })
 
+//socket.on('connect', () => { socket.emit('joinGame', prompt('Insert game name:')) })
+socket.on('game:start', () => game.start())
 socket.on('game:restart', () => game.restart())
 
 socket.on('changeDir', (socketId, dir, turnIndex) => {
@@ -64,7 +66,6 @@ function loop () {
     game.lastTurn += game.interval
     ++frames
   }
-  console.log(time_passed)
   if(time_passed > 0.1) fps = Math.round(frames / time_passed)
 
   const turn = game.turn
@@ -84,6 +85,21 @@ function paintHUD () {
   paintPing()
   paintFPS()
   paintPlayersInfo()
+  paintTime()
+}
+
+function paintTime () {
+  let startTime = game.startTime
+  let time = (Date.now() - startTime) / 1000
+  let minutes = Math.floor(time / 60)
+  let seconds = Math.floor(time % 60)
+  if (seconds < 10) seconds = '0' + seconds
+  let game_time = minutes + ':' + seconds
+  ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+  ctx.fillRect(580, 15, 100, 12)
+  ctx.fillStyle = "black";
+  ctx.font = "10px Lucida Console";
+  ctx.fillText(game_time, 580, 25);
 }
 
 function paintPlayersInfo () {

@@ -19,6 +19,12 @@ app.get('/restart', function (req, res) {
   game.restart()
 })
 
+app.get('/start', function (req, res) {
+  console.log('Start received')
+  game.sockets.forEach((socket) => socket && socket.emit('game:start'))
+  game.start()
+})
+
 io.on('connection', function (socket) {
   console.log(`${socket.id} connected`)
   game.onPlayerJoin(socket)

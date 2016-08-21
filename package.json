@@ -31,6 +31,7 @@
   "dependencies": {
     "clone": "^1.0.2",
     "express": "^4.14.0",
+    "pixi.js": "^4.0.0-rc3",
     "socket.io": "^1.4.8",
     "socket.io-client": "^1.4.8"
   },
