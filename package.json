@@ -29,6 +29,7 @@
     "tape": "^4.6.0"
   },
   "dependencies": {
+    "browserify-versionify": "^1.0.6",
     "clone": "^1.0.2",
     "express": "^4.14.0",
     "pixi.js": "^4.0.0-rc3",
