@@ -16,5 +16,7 @@ module.exports = {
   GAME_NOT_STARTED: 0,
   GAME_WIDTH: 1600,
   GAME_HEIGHT: 1200,
-  BOARD_SIZE: 10,
+  BOARD_SIZE: 50,
+  INTERVAL: 200,
+  SCALE: 0.2,
 }

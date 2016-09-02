@@ -3,16 +3,17 @@ const C = require('../src/constants.js')
 
 class Game {
 
-  constructor ({ size = C.BOARD_SIZE, interval = 200 } = {}) {
-    const board = Array(size).fill().map(() => Array(size).fill(C.EMPTY_CELL))
+  constructor () {
+    const board = Array(C.BOARD_SIZE).fill().map(() => Array(C.BOARD_SIZE).fill(C.EMPTY_CELL))
     this.state = C.GAME_NOT_STARTED
     this.turn = new Turn(board, [], [])
     this.turns = [this.turn]
     this.players = {}
     this.sockets = []
-    this.interval = interval
+    this.interval = C.INTERVAL
     this.gameLoop = this.gameLoop.bind(this)
-    this.teams = [[], [], [], []]
+    this.teams = new Array(4)
+    for (let i = 0; i < 4; ++i) this.teams[i] = new Array(4)
   }
 
   startInterval () {
@@ -42,54 +43,41 @@ class Game {
     //return this.turns.length > 1
   }
 
-  gameCanStart () {
-    let playersConnected = 0
-    this.turn.painters.forEach((painter) => painter && ++playersConnected)
-    return playersConnected > 1
-  }
-
   gameShouldRestart () {
     let startTime = this.startTime
     let time = (Date.now() - startTime) / 1000
     let minutes = Math.floor(time / 60)
     if (minutes >= C.TIME_TO_RESTART) return true
     return false
-    // Add to restart when board is full
   }
 
   getNewPlayerId () {
+    // Generates the playerId with the team and position into that team
     let playerId = 0
-    while (this.sockets[playerId] != null) ++playerId
-    return playerId
-  }
-
-  searchTeam (playerId) {
-    let minTeam = 9
-    let minPlayers = 9
-    for (let playerTeam = 0; playerTeam < 4; ++playerTeam) {
-      let nPlayers = 0
-      this.teams[playerTeam].forEach((playerId) => playerId != null && ++nPlayers)
-      if (nPlayers < minPlayers) {
-        minPlayers = nPlayers
-        minTeam = playerTeam
+    for (let i = 0; i < 4; ++i) {
+      for (let j = 0; j < 4; ++j) {
+        if (this.teams[i][j] == null) {
+          let playerId = i * 10 + j
+          return playerId
+        }
       }
     }
-    if (minTeam >= 4) return null
-    this.teams[minTeam].push(playerId)
-    return minTeam
   }
 
   onPlayerJoin (socket) {
     let playerId = this.getNewPlayerId()
-    let playerTeam = this.searchTeam(playerId)
+    let playerTeam = playerId / 10
     let playerName = 'Player ' + playerId
+    let teamPos = playerId % 10
 
     this.sockets[playerId] = socket
     if (!this.gameHasStarted() && playerTeam != null) {
       this.players[socket.id] = playerId
+      this.teams[playerTeam][teamPos] = playerId
       this.turn.addPlayer(playerId, playerTeam + 1, playerName)
       this.sendState()
     }
+    this.sendState()
   }
 
   onPlayerLeave (socket) {
@@ -99,19 +87,13 @@ class Game {
     let playerId = this.players[socket.id]
 
     if (playerId != null) {
-      let team = this.turn.painters[playerId].team - 1
-      let teamArray = this.teams[team]
+      let team = playerId / 10
+      let teamPos = playerId % 10
 
       this.sockets[playerId] = null
-      delete this.players[socket.id]
       this.turn.removePlayer(playerId)
-      // Updating team array
-      for (let i = 0; i < teamArray.length; ++i) {
-        if (teamArray[i] === playerId) {
-          delete teamArray[i]
-          break
-        }
-      }
+      this.teams[team][teamPos] = null
+      delete this.players[socket.id]
     } else {
       this.sockets.forEach((psocket) => {
         if (psocket != null && psocket.id === socket.id) {
@@ -164,14 +146,17 @@ class Game {
   }
 
   restart () {
-    this.teams = [[], [], [], []]
+    this.teams = new Array(4)
+    for (let i = 0; i < 4; ++i) this.teams[i] = new Array(4)
     this.startTime = Date.now()
     let firstTurn = new Turn()
     firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
     this.sockets.forEach((socket, playerId) => {
-      let team = this.searchTeam(playerId)
+      let team = playerId / 10
+      let teamPos = playerId % 10
       if (socket && team != null) {
         this.players[socket.id] = playerId
+        this.teams[team][teamPos] = playerId
         let playerName = 'Player ' + playerId
         firstTurn.addPlayer(playerId, team + 1, playerName)
       }
