@@ -54,8 +54,8 @@ class Game {
   getNewPlayerId () {
     // Generates the playerId with the team and position into that team
     let playerId = 0
-    for (let i = 0; i < 4; ++i) {
-      for (let j = 0; j < 4; ++j) {
+    for (let j = 0; j < 4; ++j) {
+      for (let i = 0; i < 4; ++i) {
         if (this.teams[i][j] == null) {
           let playerId = i * 10 + j
           return playerId
@@ -66,7 +66,7 @@ class Game {
 
   onPlayerJoin (socket) {
     let playerId = this.getNewPlayerId()
-    let playerTeam = playerId / 10
+    let playerTeam = Math.floor(playerId / 10)
     let playerName = 'Player ' + playerId
     let teamPos = playerId % 10
 
@@ -74,6 +74,7 @@ class Game {
     if (!this.gameHasStarted() && playerTeam != null) {
       this.players[socket.id] = playerId
       this.teams[playerTeam][teamPos] = playerId
+console.log(this.teams, playerTeam, teamPos, playerId)
       this.turn.addPlayer(playerId, playerTeam + 1, playerName)
       this.sendState()
     }

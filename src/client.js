@@ -88,7 +88,7 @@ var container = new PIXI.Container()
 var scene = new PIXI.Container()
 var hud = new PIXI.Container()
 
-var cellTexture = new PIXI.Texture.fromImage('sprites/PNG/Platformer tiles/platformerTile_03.png')
+var cellTexture = new PIXI.Texture.fromImage('sprites/GameSprites/white_ground.png')
 var playerTexture = new PIXI.Texture.fromImage('sprites/PNG/Platformer tiles/platformerTile_04.png')
 
 container.addChild(scene)

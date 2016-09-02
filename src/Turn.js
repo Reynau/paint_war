@@ -50,7 +50,7 @@ class Turn {
 
   thereIsAnotherPlayer (i, j) {
     this.painters.forEach((painter) => {
-      if (painter.i === i && painter.j === j) return true
+      if (painter != null && painter.i === i && painter.j === j) return true
     })
     return false
   }
@@ -105,6 +105,7 @@ class Turn {
     }
 
     painters.forEach((painter, painterId) => {
+      if (painter == null) return
       let i = painter.i
       let j = painter.j
       let team = painter.team
