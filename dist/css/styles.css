@@ -1,0 +1,9 @@
+html{
+	background:url('http://wallpapers-and-backgrounds.net/wp-content/uploads/2015/11/retro-game-full-hd-wallpaper_1_1600x900.jpg') no-repeat center center;
+	min-height:100%;
+	background-size:cover;
+}
+
+body{
+	min-height:100%;
+}

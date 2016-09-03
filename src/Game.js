@@ -74,7 +74,6 @@ class Game {
     if (!this.gameHasStarted() && playerTeam != null) {
       this.players[socket.id] = playerId
       this.teams[playerTeam][teamPos] = playerId
-console.log(this.teams, playerTeam, teamPos, playerId)
       this.turn.addPlayer(playerId, playerTeam + 1, playerName)
       this.sendState()
     }

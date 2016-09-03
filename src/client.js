@@ -46,6 +46,16 @@ socket.on('changeDir', (socketId, dir, turnIndex) => {
   game.onChangeDir({ id: socketId }, dir, turnIndex)
 })
 
+function start () {
+  socket.emit('game:start')
+  game.start()
+}
+
+function restart () {
+  socket.emit('game:restart')
+  game.restart()
+}
+
 const KEY = {
   W: 87,
   A: 65,
@@ -93,7 +103,15 @@ var playerTexture = new PIXI.Texture.fromImage('sprites/PNG/Platformer tiles/pla
 
 container.addChild(scene)
 
-document.body.appendChild(renderer.view)
+function resize() {
+  renderer.view.style.position = 'absolute'
+  renderer.view.style.left = ((window.innerWidth - renderer.width) >> 1) + 'px'
+  renderer.view.style.top = ((window.innerHeight - renderer.height) >> 1) + 'px'
+}
+resize()
+
+window.addEventListener('resize', resize)
+document.getElementById("game").appendChild(renderer.view)
 
 var spritesMap = createMapSprites()
 var spritesPlayers = createPlayersSprites()
@@ -283,7 +301,7 @@ function getNewPos (x, y) {
   let xshift = width / 2
   let yshift = height / 4
   let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
-  let yAddedValue = (x + y) * yshift - yshift * 2
+  let yAddedValue = (x + y + 4) * yshift - yshift * 2
 
   let xMapCenter = C.BOARD_SIZE / 2
   let yMapCenter = C.BOARD_SIZE / 2
@@ -302,7 +320,7 @@ function getNewPlayerPos (x, y) {
   let xshift = width / 2
   let yshift = height / 4
   let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
-  let yAddedValue = (x + y) * yshift - yshift * 2
+  let yAddedValue = (x + y + 4) * yshift - yshift * 2
 
   let xMapCenter = C.BOARD_SIZE / 2
   let yMapCenter = C.BOARD_SIZE / 2
