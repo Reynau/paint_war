@@ -174,7 +174,7 @@ class Turn {
       }
     }
     if(!this.isOutOfBounds(i, j - 1) && auxBoard[i][j - 1] === 0) {
-      let d = this.searchArea(board, -1, auxBoard, team, i, j - 1)
+      let d = this.searchArea(board, 4, auxBoard, team, i, j - 1)
       console.log('Up: d = ', d)
       if(d > 0) {
         console.log('d > 0')
@@ -185,28 +185,28 @@ class Turn {
     return points
   }
 
+  /* board => Original board with the values of each cell
+   * value => Value to represent the actual search
+   * auxBoard => Board with the values of the searches done
+  */
   searchArea (board, value, auxBoard, team, i, j) {
-    if (this.isOutOfBounds(i,j)) return -1
-    if (fixedCellFromTeam(board, i, j, team)) return 0
-    if (auxBoard[i][j] == value) return 1
-    if (auxBoard[i][j] != 0) return 0 // Case that the position was already visited
+    if(this.isOutOfBounds(i, j)) return -1 // Out of limits, this is not a geometric form
+    if (fixedCellFromTeam(board, i, j, team)) return 0 // Fixed cell of our team, is a wall
+    if (auxBoard[i][j] === value) return 1 // Already visited cell, we dont need to revisit it. I THINK THIS SHOULD BE 0
+    if (auxBoard[i][j] !== 0) return 0 // If is not 0 and not our value, it means that is an open area. I THINK THIS SHOULD BE -1
+    // BUT THIS WORKS, DONT TOUCH IT!
 
-    // Assigns the value to the position
-    auxBoard[i][j] = value
+    auxBoard[i][j] = value // We assign the value to the cell
 
-    // Starts the recursive search
+    // We search recursively all the adjacent positions
     let a = this.searchArea(board, value, auxBoard, team, i + 1, j)
-    if(a === -1) return -1
     let c = this.searchArea(board, value, auxBoard, team, i, j + 1)
-    if(c === -1) return -1
     let b = this.searchArea(board, value, auxBoard, team, i - 1, j)
-    if(b === -1) return -1
     let d = this.searchArea(board, value, auxBoard, team, i, j - 1)
-    if(d === -1) return -1
 
-    // In case that any search returned -1, we add all the results to get the number
-    // of positions fixed
-    return a + b + c + d + 1
+    // If any search returns -1 it means that is an open area
+    if(a === -1 || b === -1 || c === -1 || d === -1) return -1
+    return a + b + c + d // Else we return the sum of the searches
   }
 
   getInitialDir (i, j) {

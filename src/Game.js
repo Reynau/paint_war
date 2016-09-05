@@ -146,9 +146,9 @@ class Game {
   }
 
   restart () {
+    this.state = C.GAME_NOT_STARTED
     this.teams = new Array(4)
     for (let i = 0; i < 4; ++i) this.teams[i] = new Array(4)
-    this.startTime = Date.now()
     let firstTurn = new Turn()
     firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
     this.sockets.forEach((socket, playerId) => {
