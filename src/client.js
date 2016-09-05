@@ -39,28 +39,26 @@ socket.on('game:state', (state, turnIndex) => {
 
 //socket.on('connect', () => { socket.emit('joinGame', prompt('Insert game name:')) })
 socket.on('game:start', () => game.start())
-socket.on('game:restart', () => game.restart())
+socket.on('game:restart', () => {
+  initialize_renderer()
+  game.restart()
+})
 
 socket.on('changeDir', (socketId, dir, turnIndex) => {
   if (socketId === `/#${socket.id}`) return
   game.onChangeDir({ id: socketId }, dir, turnIndex)
 })
 
-function start () {
-  socket.emit('game:start')
-  game.start()
-}
-
-function restart () {
-  socket.emit('game:restart')
-  game.restart()
-}
-
 const KEY = {
   W: 87,
   A: 65,
   S: 83,
   D: 68
+}
+
+const STATE = {
+  UP: 0,
+  DOWN: 1
 }
 
 const DIR_FOR_KEY = {
@@ -70,12 +68,28 @@ const DIR_FOR_KEY = {
   [KEY.D]: C.RIGHT
 }
 
+var key_state = {
+  [KEY.W]: STATE.UP,
+  [KEY.A]: STATE.UP,
+  [KEY.S]: STATE.UP,
+  [KEY.D]: STATE.UP
+}
+
 document.addEventListener('keydown', function (e) {
-  const dir = DIR_FOR_KEY[e.keyCode]
-  if (dir == null) return
-  const turnIndex = game.turns.length - 1
-  game.onChangeDir({ id: `/#${socket.id}` }, dir, turnIndex)
-  socket.emit('changeDir', dir, turnIndex)
+  let state = key_state[e.keyCode]
+  if (state != null && state === STATE.UP) {
+    console.log('New movement packet!')
+    key_state[e.keyCode] = STATE.DOWN
+    const dir = DIR_FOR_KEY[e.keyCode]
+    const turnIndex = game.turns.length - 1
+    game.onChangeDir({ id: `/#${socket.id}` }, dir, turnIndex)
+    socket.emit('changeDir', dir, turnIndex)
+  }
+})
+
+document.addEventListener('keyup', function (e) {
+  let state = key_state[e.keyCode]
+  if (state != null && state === STATE.DOWN) key_state[e.keyCode] = STATE.UP
 })
 
 
@@ -88,17 +102,14 @@ document.addEventListener('keydown', function (e) {
 
 const PIXI = require('pixi.js')
 
-var rendererOptions = {
-  antialiasing: false,
-}
-
-var renderer = new PIXI.autoDetectRenderer(C.GAME_WIDTH, C.GAME_HEIGHT, rendererOptions)
+var renderer = new PIXI.autoDetectRenderer(C.GAME_WIDTH, C.GAME_HEIGHT)
 
 var container = new PIXI.Container()
 var scene = new PIXI.Container()
 var hud = new PIXI.Container()
 
 var cellTexture = new PIXI.Texture.fromImage('sprites/GameSprites/white_ground.png')
+var finalCellTexture = new PIXI.Texture.fromImage('sprites/GameSprites/final_ground.png')
 var playerTexture = new PIXI.Texture.fromImage('sprites/PNG/Platformer tiles/platformerTile_04.png')
 
 container.addChild(scene)
@@ -113,8 +124,15 @@ resize()
 window.addEventListener('resize', resize)
 document.getElementById("game").appendChild(renderer.view)
 
-var spritesMap = createMapSprites()
-var spritesPlayers = createPlayersSprites()
+var spritesMap
+var spritesPlayers
+
+function initialize_renderer () {
+  spritesMap = createMapSprites()
+  spritesPlayers = createPlayersSprites()
+}
+
+initialize_renderer()
 
 requestAnimationFrame(loop)
 function loop () {
@@ -191,7 +209,9 @@ function refreshMap () {
   for (let i = 0; i < n; ++i) {
     for (let j = 0; j < n; ++j) {
       let cell = spritesMap[i][j]
-      cell.tint = getColor(board[i][j])
+      let value = board[i][j]
+      cell.tint = getColor(value)
+      if (value % 10 === 4) cell.texture = finalCellTexture
     }
   }
 }
@@ -208,6 +228,58 @@ function refreshPlayers () {
       let {newxPosition, newyPosition} = getNewPlayerPos(player.i, player.j)
       sprite.position = {x : newxPosition, y: newyPosition}
     }
+  }
+}
+
+function getNewPos (x, y) {
+  let width = 111 * C.SCALE
+  let height = 128 * C.SCALE
+
+  let xshift = width / 2
+  let yshift = height / 4
+  let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
+  let yAddedValue = (x + y + 4) * yshift - yshift * 2
+
+  let xMapCenter = C.BOARD_SIZE / 2
+  let yMapCenter = C.BOARD_SIZE / 2
+  let xcenter = xMapCenter * width
+  let ycenter = yMapCenter * (height / 2)
+  let newxPosition = xcenter + xAddedValue
+  let newyPosition = yAddedValue
+
+  return {newxPosition, newyPosition}
+}
+
+function getNewPlayerPos (x, y) {
+  let width = 111 * C.SCALE
+  let height = 128 * C.SCALE
+
+  let xshift = width / 2
+  let yshift = height / 4
+  let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
+  let yAddedValue = (x + y + 4) * yshift - yshift * 2
+
+  let xMapCenter = C.BOARD_SIZE / 2
+  let yMapCenter = C.BOARD_SIZE / 2
+  let xcenter = xMapCenter * width
+  let ycenter = yMapCenter * (height / 2)
+  let newxPosition = xcenter + xAddedValue
+  let newyPosition = yAddedValue - height / 2
+
+  return {newxPosition, newyPosition}
+}
+
+function getColor (map_value) {
+  var value = map_value % 10
+  var team = Math.floor(map_value / 10)
+  var color = Math.floor(255 / 4 * (value + 1))
+  if (color > 255) color = 255
+  switch (team) {
+    case 0: return 0xFFFFFF
+    case 1: return color * 0x10000
+    case 2: return color * 0x100
+    case 3: return color * 0x1
+    case 4: return color * 0x100 + color
   }
 }
 
@@ -280,68 +352,4 @@ function generatePing (style) {
   pingText.x = 800
   pingText.y = 60
   return pingText
-}
-
-function isoTo2D (x, y) {
-  let xNewPos = x - y
-  let yNewPos = (x + y) / 2
-  return {xNewPos, yNewPos}
-}
-
-function twoDToIso (x, y) {
-  let xNewPos = (2 * y + x) / 2
-  let yNewPos = (2 * y - x) / 2
-  return {xNewPos, yNewPos}
-}
-
-function getNewPos (x, y) {
-  let width = 111 * C.SCALE
-  let height = 128 * C.SCALE
-
-  let xshift = width / 2
-  let yshift = height / 4
-  let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
-  let yAddedValue = (x + y + 4) * yshift - yshift * 2
-
-  let xMapCenter = C.BOARD_SIZE / 2
-  let yMapCenter = C.BOARD_SIZE / 2
-  let xcenter = xMapCenter * width
-  let ycenter = yMapCenter * (height / 2)
-  let newxPosition = xcenter + xAddedValue
-  let newyPosition = yAddedValue
-
-  return {newxPosition, newyPosition}
-}
-
-function getNewPlayerPos (x, y) {
-  let width = 111 * C.SCALE
-  let height = 128 * C.SCALE
-
-  let xshift = width / 2
-  let yshift = height / 4
-  let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
-  let yAddedValue = (x + y + 4) * yshift - yshift * 2
-
-  let xMapCenter = C.BOARD_SIZE / 2
-  let yMapCenter = C.BOARD_SIZE / 2
-  let xcenter = xMapCenter * width
-  let ycenter = yMapCenter * (height / 2)
-  let newxPosition = xcenter + xAddedValue
-  let newyPosition = yAddedValue - height / 2
-
-  return {newxPosition, newyPosition}
-}
-
-function getColor (map_value) {
-  var value = map_value % 10
-  var team = Math.floor(map_value / 10)
-  var color = Math.floor(255 / 4 * (value + 1))
-  if (color > 255) color = 255
-  switch (team) {
-    case 0: return 0xFFFFFF
-    case 1: return color * 0x10000
-    case 2: return color * 0x100
-    case 3: return color * 0x1
-    case 4: return color * 0x100 + color
-  }
 }
