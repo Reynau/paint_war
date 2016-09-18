@@ -25,6 +25,11 @@ socket.on('game:pong', (serverNow) => {
   setTimeout(sendPing, 500)
 })
 
+socket.on('game:name', () => {
+  let name = prompt('Enter your name')
+  socket.emit('game:name', name)
+})
+
 socket.on('game:state', (state, turnIndex) => {
   const { board, painters, inputs } = state.turn
   const turn = new Turn(board, painters, inputs)
@@ -113,6 +118,7 @@ var finalCellTexture = new PIXI.Texture.fromImage('sprites/GameSprites/final_gro
 var playerTexture = new PIXI.Texture.fromImage('sprites/PNG/Platformer tiles/platformerTile_04.png')
 
 container.addChild(scene)
+container.addChild(hud)
 
 function resize() {
   renderer.view.style.position = 'absolute'
@@ -126,10 +132,12 @@ document.getElementById("game").appendChild(renderer.view)
 
 var spritesMap
 var spritesPlayers
+var hudData
 
 function initialize_renderer () {
   spritesMap = createMapSprites()
   spritesPlayers = createPlayersSprites()
+  hudData = createHUD()
 }
 
 initialize_renderer()
@@ -150,6 +158,7 @@ function loop () {
 
   refreshMap()
   refreshPlayers()
+  refreshHud()
   renderer.render(container)
 }
 
@@ -203,6 +212,29 @@ function createPlayersSprites () {
   return playersArray
 }
 
+function createHUD () {
+  let style = {fontFamily : 'Lucida Console', fontSize: 10, fill : 0xffffff}
+
+  let hud_map = {}
+
+  hud_map.time = new PIXI.Text('', style)
+  hud_map.players = new PIXI.Text('', style)
+  hud_map.ping = new PIXI.Text('', style)
+  hud_map.fps = new PIXI.Text('', style)
+
+  hud_map.time.position.set(800, 25)
+  hud_map.players.position.set(500, 25)
+  hud_map.ping.position.set(800, 40)
+  hud_map.fps.position.set(800, 55)
+
+  hud.addChild(hud_map.time)
+  hud.addChild(hud_map.players)
+  hud.addChild(hud_map.ping)
+  hud.addChild(hud_map.fps)
+
+  return hud_map
+}
+
 function refreshMap () {
   let n = C.BOARD_SIZE
   let board = game.turn.board
@@ -229,6 +261,18 @@ function refreshPlayers () {
       sprite.position = {x : newxPosition, y: newyPosition}
     }
   }
+}
+
+function refreshHud () {
+  let time = getTime()
+  let players = getPlayers()
+  let ping = getPing()
+  let fps = getFps()
+
+  hudData.time.text = 'Time: ' + time
+  hudData.players.text = players
+  hudData.ping.text = 'Ping: ' + ping
+  hudData.fps.text = 'FPS: ' + fps
 }
 
 function getNewPos (x, y) {
@@ -283,73 +327,30 @@ function getColor (map_value) {
   }
 }
 
-function generateHUD () {
-  let hudContainer = new PIXI.Container()
-
-  let style = {
-      fontFamily : 'Lucida Console',
-      fontSize : '15px',
-      fill : '#FFFFFF',
-  }
-
-  let time = generateTime(style)
-  let ping = generatePing(style)
-  let fps = generateFPS(style)
-  let playersInfo = generatePlayersInfo(style)
-
-  hudContainer.addChild(time)
-  hudContainer.addChild(ping)
-  hudContainer.addChild(fps)
-  hudContainer.addChild(playersInfo)
-
-  return hudContainer
-}
-
-function paintHUD () {
-  paintPing()
-  paintFPS()
-  paintPlayersInfo()
-  paintTime()
-}
-
-function generateTime (style) {
+function getTime () {
   let startTime = game.startTime
   let time = (Date.now() - startTime) / 1000
   let minutes = Math.floor(time / 60)
   let seconds = Math.floor(time % 60)
   if (seconds < 10) seconds = '0' + seconds
   let game_time = minutes + ':' + seconds
-
-  let timeText = new PIXI.Text(game_time, style)
-  timeText.x = 800
-  timeText.y = 25
-
-  return timeText
+  return game_time
 }
 
-function generatePlayersInfo (style) {
+function getPlayers () {
   let text = 'List of players:\n'
   let players = game.turn.painters
   for(let i = 0; i < players.length; ++i) {
     let name = players[i].name
     text += ' - ' + name + '\n'
   }
-  let playersText = new PIXI.Text(text, style)
-  playersText.x = 900
-  playersText.y = 25
-  return playersText
+  return text
 }
 
-function generateFPS (style) {
-  let fpsText = new PIXI.Text('FPS: ' + fps, style)
-  fpsText.x = 800
-  fpsText.y = 40
-  return fpsText
+function getPing () {
+  return ping
 }
 
-function generatePing (style) {
-  let pingText = new PIXI.Text('Ping: ' + ping, style)
-  pingText.x = 800
-  pingText.y = 60
-  return pingText
+function getFps () {
+  return fps
 }

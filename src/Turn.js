@@ -139,47 +139,27 @@ class Turn {
 
   // Take the position player blocked and search areas in the 4 possible directions
   searchNearForAreas (board, team, i, j) {
-    console.log('Searching for near areas to ', i, j, 'value ', board[i][j])
     let size = board.length
     let auxBoard = Array(size).fill().map(() => Array(size).fill(0))
     let points = 0
 
-    if(!this.isOutOfBounds(i + 1, j) && auxBoard[i + 1][j] === 0) {
-      // Search into an area
-      let a = this.searchArea(board, 1, auxBoard, team, i + 1, j)
-      console.log('a = ', a)
-      // If value is bigger than 0 means that is a closen area
-      if(a > 0) {
-        console.log('Right: a > 0')
-        this.paintArea(board, team, i + 1, j)
-        points += 5 * a
-      }
-    }
-    if(!this.isOutOfBounds(i, j + 1) && auxBoard[i][j + 1] === 0){
-      let c = this.searchArea(board, 2, auxBoard, team, i, j + 1)
-      console.log('c = ', c)
-      if(c > 0) {
-        console.log('Down: c > 0')
-        this.paintArea(board, team, i, j + 1)
-        points += 5 * c
-      }
-    }
-    if(!this.isOutOfBounds(i - 1, j) && auxBoard[i - 1][j] === 0) {
-      let b = this.searchArea(board, 3, auxBoard, team, i - 1, j)
-      console.log('Left: b = ', b)
-      if(b > 0) {
-        console.log('b > 0')
-        this.paintArea(board, team, i - 1, j)
-        points += 5 * b
-      }
-    }
-    if(!this.isOutOfBounds(i, j - 1) && auxBoard[i][j - 1] === 0) {
-      let d = this.searchArea(board, 4, auxBoard, team, i, j - 1)
-      console.log('Up: d = ', d)
-      if(d > 0) {
-        console.log('d > 0')
-        this.paintArea(board, team, i, j - 1)
-        points += 5 * d
+    let dirs = []
+    dirs[0] = {i: 1, j: 0}
+    dirs[1] = {i: 0, j: 1}
+    dirs[2] = {i: -1, j: 0}
+    dirs[3] = {i: 0, j: -1}
+
+    for (let k = 0; k < 4; ++k) {
+      let x = i + dirs[k].i
+      let y = j + dirs[k].j
+      if(!this.isOutOfBounds(x, y) && auxBoard[x][y] === 0) {
+        // Search into an area
+        let value = this.searchArea(board, k + 1, auxBoard, team, x, y)
+        // If value is bigger than 0 means that is a closen area
+        if(value > 0) {
+          this.paintArea(board, team, x, y)
+          points += 5 * value
+        }
       }
     }
     return points

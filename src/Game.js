@@ -64,10 +64,10 @@ class Game {
     }
   }
 
-  onPlayerJoin (socket) {
+  onPlayerJoin (socket, name) {
     let playerId = this.getNewPlayerId()
     let playerTeam = Math.floor(playerId / 10)
-    let playerName = 'Player ' + playerId
+    let playerName = name
     let teamPos = playerId % 10
 
     this.sockets[playerId] = socket

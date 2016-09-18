@@ -26,8 +26,13 @@ app.get('/start', function (req, res) {
 })
 
 io.on('connection', function (socket) {
-  console.log(`${socket.id} connected`)
-  game.onPlayerJoin(socket)
+  console.log(`${socket.id} connected. Waiting for the name...`)
+  socket.emit('game:name')  // Asking for name
+
+  socket.on('game:name', function (name) {
+      console.log(`Player with ${socket.id} identified as ` + name)
+      game.onPlayerJoin(socket, name)
+  })
 
   socket.on('changeDir', function (dir, turnIndex) {
     game.onChangeDir(socket, dir, turnIndex)
