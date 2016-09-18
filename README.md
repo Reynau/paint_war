@@ -2,6 +2,7 @@
 
 ##Objective:
 Paint more floor than your enemies!
+Hint: If you draw a figure with fixed tiles on the floor, it will be filled!
 
 ##Instructions:
 ```
@@ -10,4 +11,6 @@ $ npm start
 ```
 Open localhost:3000
 
-Enjoy
+WASD to move.
+
+Enjoy!
