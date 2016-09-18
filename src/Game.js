@@ -157,7 +157,7 @@ class Game {
       if (socket && team != null) {
         this.players[socket.id] = playerId
         this.teams[team][teamPos] = playerId
-        let playerName = 'Player ' + playerId
+        let playerName = this.turn.painters[playerId].name
         firstTurn.addPlayer(playerId, team + 1, playerName)
       }
     })

@@ -341,6 +341,7 @@ function getPlayers () {
   let text = 'List of players:\n'
   let players = game.turn.painters
   for(let i = 0; i < players.length; ++i) {
+    if(players[i] == null) continue
     let name = players[i].name
     text += ' - ' + name + '\n'
   }
