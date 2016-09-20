@@ -44,7 +44,10 @@ socket.on('game:state', (state, turnIndex) => {
 
 //socket.on('connect', () => { socket.emit('joinGame', prompt('Insert game name:')) })
 socket.on('game:start', () => game.start())
-socket.on('game:restart', () => game.restart())
+socket.on('game:restart', () => {
+  reset_renderer()
+  game.restart()
+})
 
 socket.on('changeDir', (socketId, dir, turnIndex) => {
   if (socketId === `/#${socket.id}`) return
@@ -125,6 +128,14 @@ function initialize_renderer () {
   spritesMap = createMapSprites()
   spritesPlayers = createPlayersSprites()
   hudData = createHUD()
+}
+
+function reset_renderer () {
+  for (let i = 0; i < C.BOARD_SIZE; ++i) {
+    for (let j = 0; j < C.BOARD_SIZE; ++j) {
+      spritesMap[i][j].setTexture(cellTexture)
+    }
+  }
 }
 
 initialize_renderer()
