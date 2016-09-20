@@ -44,7 +44,10 @@ socket.on('game:state', (state, turnIndex) => {
 
 //socket.on('connect', () => { socket.emit('joinGame', prompt('Insert game name:')) })
 socket.on('game:start', () => game.start())
-socket.on('game:restart', () => game.restart())
+socket.on('game:restart', () => {
+  initialize_renderer()
+  game.restart()
+})
 
 socket.on('changeDir', (socketId, dir, turnIndex) => {
   if (socketId === `/#${socket.id}`) return
@@ -80,6 +83,7 @@ var key_state = {
 document.addEventListener('keydown', function (e) {
   let state = key_state[e.keyCode]
   if (state != null && state === STATE.UP) {
+    console.log('New movement packet!')
     key_state[e.keyCode] = STATE.DOWN
     const dir = DIR_FOR_KEY[e.keyCode]
     const turnIndex = game.turns.length - 1
@@ -104,7 +108,6 @@ document.addEventListener('keyup', function (e) {
 const PIXI = require('pixi.js')
 
 var renderer = new PIXI.autoDetectRenderer(C.GAME_WIDTH, C.GAME_HEIGHT)
-document.getElementById("game").appendChild(renderer.view)
 
 var container = new PIXI.Container()
 var scene = new PIXI.Container()
@@ -116,6 +119,16 @@ var playerTexture = new PIXI.Texture.fromImage('sprites/PNG/Platformer tiles/pla
 
 container.addChild(scene)
 container.addChild(hud)
+
+function resize() {
+  renderer.view.style.position = 'absolute'
+  renderer.view.style.left = ((window.innerWidth - renderer.width) >> 1) + 'px'
+  renderer.view.style.top = ((window.innerHeight - renderer.height) >> 1) + 'px'
+}
+resize()
+
+window.addEventListener('resize', resize)
+document.getElementById("game").appendChild(renderer.view)
 
 var spritesMap
 var spritesPlayers
@@ -315,7 +328,6 @@ function getColor (map_value) {
 }
 
 function getTime () {
-  if (game.state === C.GAME_NOT_STARTED) return 'Not started'
   let startTime = game.startTime
   let time = (Date.now() - startTime) / 1000
   let minutes = Math.floor(time / 60)

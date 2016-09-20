@@ -147,7 +147,6 @@ class Game {
 
   restart () {
     this.state = C.GAME_NOT_STARTED
-    this.startTime = null
     this.teams = new Array(4)
     for (let i = 0; i < 4; ++i) this.teams[i] = new Array(4)
     let firstTurn = new Turn()
