@@ -19,15 +19,15 @@ function getColor (map_value) {
 }
 
 function getNewPlayerPos (x, y) {
-  let width = 111 * C.GAME.SCALE
-  let height = 128 * C.GAME.SCALE
+  let width = 111 * C.SCALE
+  let height = 128 * C.SCALE
 
   let xshift = width / 2
   let yshift = height / 4
   let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
   let yAddedValue = (x + y + 4) * yshift - yshift * 2
 
-  let xMapCenter = C.BOARD.SIZE / 2
+  let xMapCenter = C.BOARD_SIZE / 2
   let xcenter = xMapCenter * width
   let newxPosition = xcenter + xAddedValue
   let newyPosition = yAddedValue - height / 2
@@ -36,19 +36,20 @@ function getNewPlayerPos (x, y) {
 }
 
 function getNewPos (x, y) {
-  let width = 111 * C.GAME.SCALE
-  let height = 128 * C.GAME.SCALE
+  let width = 111 * C.SCALE
+  let height = 128 * C.SCALE
 
   let xshift = width / 2
   let yshift = height / 4
   let xAddedValue = x >= y ? (x - y) * -xshift : (y - x) * xshift
   let yAddedValue = (x + y + 4) * yshift - yshift * 2
 
-  let xMapCenter = C.BOARD.SIZE / 2
+  let xMapCenter = C.BOARD_SIZE / 2
   let xcenter = xMapCenter * width
   let newxPosition = xcenter + xAddedValue
+  let newyPosition = yAddedValue
 
-  return {newxPosition, yAddedValue}
+  return {newxPosition, newyPosition}
 }
 
 class Client {
@@ -83,7 +84,7 @@ class Client {
     this.hud_players = new PIXI.Text('', this.style)
 
     // Renderer
-    this.renderer = new PIXI.autoDetectRenderer(C.GAME.WIDTH, C.GAME.WEIGH)
+    this.renderer = new PIXI.autoDetectRenderer(C.GAME_WIDTH, C.GAME_WEIGH)
     this.stage = new PIXI.Container()
     this.scene = new PIXI.Container()
     this.hud = new PIXI.Container()
@@ -123,9 +124,7 @@ class Client {
   // Internal loop of the client
   loop () {
     let self = this
-    requestAnimationFrame(function () {
-      self.loop()
-    })
+    requestAnimationFrame(() => self.loop())
 
     this.refresh_logic()
     this.synchronize_renderer()
@@ -135,7 +134,7 @@ class Client {
 
   // Executes the logic
   refresh_logic () {
-    if (this.game.state === C.STATE.NOT_STARTED)  return
+    if (this.game.state === C.GAME_NOT_STARTED)  return
 
     while (Date.now() - this.game.lastTurn >= this.game.interval) {
       this.game.tick()
@@ -153,8 +152,8 @@ class Client {
   // Synchronize the map with the map sprites
   synchronize_map () {
     let board = this.game.turn.board
-    for (let i = 0; i < C.BOARD.SIZE; ++i) {
-      for (let j = 0; j < C.BOARD.SIZE; ++j) {
+    for (let i = 0; i < C.BOARD_SIZE; ++i) {
+      for (let j = 0; j < C.BOARD_SIZE; ++j) {
         let cell = this.map_sprites[i][j]
         let value = board[i][j]
         cell.tint = getColor(value)
@@ -212,7 +211,7 @@ class Client {
 
   // Formats time to be rendered in the hud
   getTime () {
-    if (this.game.state === C.STATE.NOT_STARTED) return 'Not started'
+    if (this.game.state === C.GAME_NOT_STARTED) return 'Not started'
     let startTime = this.game.startTime
     let time = (Date.now() - startTime) / 1000
     let minutes = Math.floor(time / 60)
@@ -276,23 +275,24 @@ class Client {
     this.game.start()
   }
   socket_restart () {
-    reset_renderer()
-    game.restart()
+    this.game.restart()
+    this.synchronize_renderer()
   }
   socket_change_dir (socketId, dir, turnIndex) {
-    if (socketId === `/#${socket.id}`) return
-    game.onChangeDir({ id: socketId }, dir, turnIndex)
+    if (socketId === `/#${this.socket.id}`) return
+    this.game.onChangeDir({ id: socketId }, dir, turnIndex)
   }
 
 
 /******* DOM CALLBACKS *******/
   dom_keydown (e) {
+    console.log('key up')
     let state = key_state[e.keyCode]
     if (state != null && state === STATE.UP) {
       key_state[e.keyCode] = STATE.DOWN
       const dir = DIR_FOR_KEY[e.keyCode]
-      const turnIndex = game.turns.length - 1
-      game.onChangeDir({ id: `/#${socket.id}` }, dir, turnIndex)
+      const turnIndex = this.game.turns.length - 1
+      this.game.onChangeDir({ id: `/#${this.socket.id}` }, dir, turnIndex)
       this.socket.emit('changeDir', dir, turnIndex)
     }
   }
@@ -364,7 +364,7 @@ class Client {
 
   // Initialize the map_sprites with the map sprites
   generate_map_sprites () {
-    let n = C.BOARD.SIZE
+    let n = C.BOARD_SIZE
     // Generating the sprites map
     this.map_sprites = new Array(n)
     for (let i = 0; i < n; ++i) {
@@ -381,7 +381,7 @@ class Client {
 
   // Loads diagonally the sprites in order to get the correct depth
   scene_load_map () {
-    let n = C.BOARD.SIZE
+    let n = C.BOARD_SIZE
     // Adding the sprites to the scene
     for (let slice = 0; slice < 2 * n - 1; ++slice) {
       let z = slice < n ? 0 : slice - n + 1
@@ -406,10 +406,10 @@ const STATE = {
 }
 
 const DIR_FOR_KEY = {
-  [KEY.W]: C.DIR.UP,
-  [KEY.A]: C.DIR.LEFT,
-  [KEY.S]: C.DIR.DOWN,
-  [KEY.D]: C.DIR.RIGHT
+  [KEY.W]: C.UP,
+  [KEY.A]: C.LEFT,
+  [KEY.S]: C.DOWN,
+  [KEY.D]: C.RIGHT
 }
 
 var key_state = {
@@ -419,7 +419,5 @@ var key_state = {
   [KEY.D]: STATE.UP
 }
 
-$( document ).ready(function() {
-  let client = new Client()
-  client.init()
-})
+let client = new Client()
+client.init()

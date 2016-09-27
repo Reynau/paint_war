@@ -158,8 +158,11 @@ class Game {
       if (socket && team != null) {
         this.players[socket.id] = playerId
         this.teams[team][teamPos] = playerId
-        let playerName = this.turn.painters[playerId].name
-        firstTurn.addPlayer(playerId, team + 1, playerName)
+        let old_player = this.turn.painters[playerId];
+        let player_name;
+        if (old_player != undefined) player_name = old_player.name;
+        else player_name = 'Error loading name'
+        firstTurn.addPlayer(playerId, team + 1, player_name)
       }
     })
     this.turns = [firstTurn]
