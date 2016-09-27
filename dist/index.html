@@ -10,17 +10,14 @@
   <div class="container-fluid">
     <div class="row">
       <div id="game"></div>
-      <div class="col-md-2">
-        <!-- Hud here? -->
-      </div>
-      <div class="col-md-8">
-        <!-- Space for the game -->
-      </div>
-      <div class="col-md-2">
-        <a class="btn btn-primary" href="start" role="button">Start</a>
-        <a class="btn btn-primary" href="restart" role="button">Restart</a>
+      <div id="float_container">
+        <a class="btn btn-primary floating_btn" href="start" role="button">Start</a>
+        <a class="btn btn-primary floating_btn" href="restart" role="button">Restart</a>
       </div>
     </div>
   </div>
-  <script src="bundle.js"></script>
+  <script src="bundle.js">
+    let client = new Client()
+    client.init()
+  </script>
 </body>
