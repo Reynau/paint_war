@@ -8,14 +8,8 @@ class Player extends Entity {
     this.dir = dir
     this.team = team
     this.alive = true
-    this.timeToRespawn = 0
     this.name = name
     this.points = 0
-  }
-
-  die () {
-    this.alive = false
-    this.secToLive = this.deathTime
   }
 
   getBaseValue () {

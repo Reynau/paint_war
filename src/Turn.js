@@ -104,7 +104,7 @@ class Turn {
       }
     }
 
-    painters.forEach((painter, painterId) => {
+    painters.forEach((painter) => {
       if (painter == null) return
       let i = painter.i
       let j = painter.j
@@ -140,7 +140,7 @@ class Turn {
   // Take the position player blocked and search areas in the 4 possible directions
   searchNearForAreas (board, team, i, j) {
     let size = board.length
-    let auxBoard = Array(size).fill().map(() => Array(size).fill(0))
+    let auxBoard = new Array(size).fill().map(() => new Array(size).fill(0))
     let points = 0
 
     let dirs = []

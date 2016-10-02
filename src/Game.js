@@ -4,7 +4,7 @@ const C = require('../src/constants.js')
 class Game {
 
   constructor () {
-    const board = Array(C.BOARD_SIZE).fill().map(() => Array(C.BOARD_SIZE).fill(C.EMPTY_CELL))
+    const board = new Array(C.BOARD_SIZE).fill().map(() => new Array(C.BOARD_SIZE).fill(C.EMPTY_CELL))
     this.state = C.GAME_NOT_STARTED
     this.turn = new Turn(board, [], [])
     this.turns = [this.turn]
@@ -47,18 +47,15 @@ class Game {
     let startTime = this.startTime
     let time = (Date.now() - startTime) / 1000
     let minutes = Math.floor(time / 60)
-    if (minutes >= C.TIME_TO_RESTART) return true
-    return false
+    return (minutes >= C.TIME_TO_RESTART)
   }
 
   getNewPlayerId () {
     // Generates the playerId with the team and position into that team
-    let playerId = 0
     for (let j = 0; j < 4; ++j) {
       for (let i = 0; i < 4; ++i) {
         if (this.teams[i][j] == null) {
-          let playerId = i * 10 + j
-          return playerId
+          return i * 10 + j
         }
       }
     }
@@ -107,7 +104,6 @@ class Game {
     const playerId = this.players[socket.id]
     if (playerId == null) return
 
-    const emitterId = socket.id
     if (turnIndex == null) turnIndex = this.turns.length - 1
 
     const turn = this.turns[turnIndex]
@@ -134,8 +130,6 @@ class Game {
         let nextTurn = this.turn.evolve()
         this.turns.push(nextTurn)
         this.turn = nextTurn
-        let turns = this.turns.length
-        //if (this.imServer() && turns % C.TURNS_TO_REFRESH === 0) this.sendState()
       }
     }
   }
@@ -184,10 +178,6 @@ class Game {
     this.sockets.forEach((socket) => {
       if (socket) socket.emit('game:state', state, turnIndex)
     })
-  }
-
-  imServer () {
-    return (typeof window === 'undefined')
   }
 }
 exports.Game = Game
