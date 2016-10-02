@@ -136,7 +136,6 @@ class Client {
   refresh_logic () {
     if (this.game.state === C.GAME_NOT_STARTED)  return
 
-    console.log(this.game.lastTurn + ' ' + this.game.interval)
     while (Date.now() - this.game.lastTurn >= this.game.interval) {
       this.game.tick()
       this.game.lastTurn += this.game.interval
