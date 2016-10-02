@@ -136,7 +136,7 @@ class Game {
 
   start () {
     this.state = C.GAME_STARTED
-    this.startTime = Date.now()
+    this.startInterval()
   }
 
   restart () {

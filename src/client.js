@@ -136,6 +136,7 @@ class Client {
   refresh_logic () {
     if (this.game.state === C.GAME_NOT_STARTED)  return
 
+    console.log(this.game.lastTurn + ' ' + this.game.interval)
     while (Date.now() - this.game.lastTurn >= this.game.interval) {
       this.game.tick()
       this.game.lastTurn += this.game.interval
@@ -157,7 +158,7 @@ class Client {
         let cell = this.map_sprites[i][j]
         let value = board[i][j]
         cell.tint = getColor(value)
-        if (value % 10 === 4) cell.setTexture(this.fixed_tile_texture)
+        if (value % 10 === 4) cell.texture = this.fixed_tile_texture
       }
     }
   }
@@ -286,7 +287,6 @@ class Client {
 
 /******* DOM CALLBACKS *******/
   dom_keydown (e) {
-    console.log('key up')
     let state = key_state[e.keyCode]
     if (state != null && state === STATE.UP) {
       key_state[e.keyCode] = STATE.DOWN
