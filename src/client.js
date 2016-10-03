@@ -118,7 +118,7 @@ class Client {
   // Initialize the renderer linking the scene and the hud with the stage
   init_renderer () {
     this.stage.addChild(this.scene)
-    if(!this.show_hud) this.stage.addChild(this.hud)
+    if(this.show_hud) this.stage.addChild(this.hud)
   }
 
   // Internal loop of the client
@@ -318,6 +318,8 @@ class Client {
     this.socket.on('game:start', () => self.socket_start())
     this.socket.on('game:restart', () => self.socket_restart())
     this.socket.on('changeDir', (socketId, dir, turnIndex) => self.socket_change_dir(socketId, dir, turnIndex))
+
+    this.sendPing()
   }
 
   // Initialize the map sprites
