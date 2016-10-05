@@ -55,6 +55,7 @@ function getNewPos (x, y) {
 class Client {
 
   constructor () {
+    console.log('Client Constructor')
     this.game = new Game()
     this.show_hud = true
 
@@ -101,6 +102,7 @@ class Client {
 
   // Initialize the client
   init () {
+    console.log('Client Init')
     document.getElementById("game").appendChild(this.renderer.view)
 
     this.socket = io()
@@ -271,6 +273,7 @@ class Client {
     this.game.lastTurn = state.timestamp + this.client_lead
   }
   socket_start () {
+    console.log('Socket Start Function')
     this.startTime = Date.now()
     this.game.start()
   }

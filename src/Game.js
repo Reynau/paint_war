@@ -130,6 +130,7 @@ class Game {
   }
 
   start () {
+    console.log('Start function')
     this.state = C.GAME_STARTED
     this.startInterval()
   }
@@ -140,9 +141,11 @@ class Game {
     this.players = {}
     this.teams = this.newTeamsArray()
 
+    let firstTurn = this.restartTurn()
+
     this.state = C.GAME_NOT_STARTED
-    this.turn = this.restartTurn()
-    this.turns = [this.turn]
+    this.turn = firstTurn
+    this.turns = [firstTurn]
 
     this.sendState()
   }
@@ -153,7 +156,7 @@ class Game {
     let firstTurn = new Turn(board, [], [])
 
     this.sockets.forEach((socket) => {
-      if (socket != null) return
+      if (!socket) return
 
       let playerId = this.getNewPlayerId()
       if (playerId != null) {
@@ -162,6 +165,8 @@ class Game {
 
         this.players[socket.id] = playerId
         this.teams[team][teamPos] = playerId
+
+        console.log(playerId, this.players[socket.id], this.teams[team][teamPos])
 
         let old_player = this.turn.painters[playerId];
         let player_name;
