@@ -5,15 +5,17 @@ class Game {
 
   constructor () {
     const board = new Array(C.BOARD_SIZE).fill().map(() => new Array(C.BOARD_SIZE).fill(C.EMPTY_CELL))
+
     this.state = C.GAME_NOT_STARTED
     this.turn = new Turn(board, [], [])
     this.turns = [this.turn]
-    this.players = {}
-    this.sockets = []
+
+    this.sockets = [] // socket.id --> socket
+    this.players = {} // socket.id --> playerId XXXX
+    this.teams = this.newTeamsArray() // teams[team][player] --> playerId
+
     this.interval = C.INTERVAL
     this.gameLoop = this.gameLoop.bind(this)
-    this.teams = new Array(4)
-    for (let i = 0; i < 4; ++i) this.teams[i] = new Array(4)
   }
 
   startInterval () {
@@ -59,16 +61,17 @@ class Game {
         }
       }
     }
+    return null
   }
 
   onPlayerJoin (socket, name) {
     let playerId = this.getNewPlayerId()
     let playerTeam = Math.floor(playerId / 10)
-    let playerName = name
     let teamPos = playerId % 10
+    let playerName = name
 
-    this.sockets[playerId] = socket
-    if (!this.gameHasStarted() && playerTeam != null) {
+    this.sockets[socket.id] = socket
+    if (!this.gameHasStarted() && playerId != null) {
       this.players[socket.id] = playerId
       this.teams[playerTeam][teamPos] = playerId
       this.turn.addPlayer(playerId, playerTeam + 1, playerName)
@@ -77,26 +80,18 @@ class Game {
     this.sendState()
   }
 
-  onPlayerLeave (socket) {
-    // Socket = null, delete player from players, update turn.removePlayer
+  onPlayerLeave (leave_socket) {
+    // Deletes the socket from the array of sockets
+    this.sockets[leave_socket.id] = null
 
-    // Trying to get the playerId => only if player is on the game
-    let playerId = this.players[socket.id]
-
+    // If player entered the game, playerId != null
+    let playerId = this.players[leave_socket.id]
     if (playerId != null) {
       let team = playerId / 10
       let teamPos = playerId % 10
-
-      this.sockets[playerId] = null
       this.turn.removePlayer(playerId)
       this.teams[team][teamPos] = null
-      delete this.players[socket.id]
-    } else {
-      this.sockets.forEach((psocket) => {
-        if (psocket != null && psocket.id === socket.id) {
-          psocket = null
-        }
-      })
+      this.players[leave_socket.id] = null
     }
   }
 
@@ -140,18 +135,34 @@ class Game {
   }
 
   restart () {
-    this.state = C.GAME_NOT_STARTED
     this.startTime = null
-    this.teams = new Array(4)
-    for (let i = 0; i < 4; ++i) this.teams[i] = new Array(4)
-    let firstTurn = new Turn()
-    firstTurn.board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
-    this.sockets.forEach((socket, playerId) => {
-      let team = playerId / 10
-      let teamPos = playerId % 10
-      if (socket && team != null) {
+
+    this.players = {}
+    this.teams = this.newTeamsArray()
+
+    this.state = C.GAME_NOT_STARTED
+    this.turn = this.restartTurn()
+    this.turns = [this.turn]
+
+    this.sendState()
+  }
+
+  restartTurn () {
+    const board = this.turn.board.map(row => row.map(cell => C.EMPTY_CELL))
+
+    let firstTurn = new Turn(board, [], [])
+
+    this.sockets.forEach((socket) => {
+      if (socket != null) return
+
+      let playerId = this.getNewPlayerId()
+      if (playerId != null) {
+        let team = playerId / 10
+        let teamPos = playerId % 10
+
         this.players[socket.id] = playerId
         this.teams[team][teamPos] = playerId
+
         let old_player = this.turn.painters[playerId];
         let player_name;
         if (old_player != undefined) player_name = old_player.name;
@@ -159,9 +170,7 @@ class Game {
         firstTurn.addPlayer(playerId, team + 1, player_name)
       }
     })
-    this.turns = [firstTurn]
-    this.turn = firstTurn
-    this.sendState()
+    return firstTurn
   }
 
   sendState () {
@@ -178,6 +187,12 @@ class Game {
     this.sockets.forEach((socket) => {
       if (socket) socket.emit('game:state', state, turnIndex)
     })
+  }
+
+  newTeamsArray () {
+    let teams = new Array(4)
+    for (let i = 0; i < 4; ++i) teams[i] = new Array(4)
+    return teams
   }
 }
 exports.Game = Game
