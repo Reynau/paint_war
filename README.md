@@ -1,4 +1,5 @@
 # PaintWar
+PaintWar is a game developed in a multiplayer videogames course as a final project. Is the first game I developed! :smiley:
 
 ##Objective:
 Paint more floor than your enemies!
