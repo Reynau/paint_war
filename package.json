@@ -29,6 +29,7 @@
     "tape": "^4.6.0"
   },
   "dependencies": {
+    "browserify": "^13.0.1",
     "browserify-versionify": "^1.0.6",
     "clone": "^1.0.2",
     "express": "^4.14.0",
