@@ -13,18 +13,6 @@ app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname, '../dist/', 'index.html'))
 })
 
-app.get('/restart', function (req, res) {
-  console.log('Restart received')
-  game.sockets.forEach((socket) => socket && socket.emit('game:restart'))
-  game.restart()
-})
-
-app.get('/start', function (req, res) {
-  console.log('Start received')
-  game.sockets.forEach((socket) => socket && socket.emit('game:start'))
-  game.start()
-})
-
 io.on('connection', function (socket) {
   console.log(`${socket.id} connected. Waiting for the name...`)
   socket.emit('game:name')  // Asking for name
@@ -42,6 +30,18 @@ io.on('connection', function (socket) {
   socket.on('disconnect', function () {
     console.log(`${socket.id} disconnected`)
     game.onPlayerLeave(socket)
+  })
+
+  socket.on('start', function () {
+    console.log('Start received')
+    game.sockets.forEach((socket) => socket && socket.emit('game:start'))
+    game.start()
+  })
+
+  socket.on('restart', function () {
+    console.log('Restart received')
+    game.sockets.forEach((socket) => socket && socket.emit('game:restart'))
+    game.restart()
   })
 
   socket.on('game:ping', () => socket.emit('game:pong', Date.now()))

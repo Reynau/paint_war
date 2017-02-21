@@ -5,9 +5,9 @@ const C = require('./constants.js')
 const PIXI = require('pixi.js')
 
 function getColor (map_value) {
-  var value = map_value % 10
-  var team = Math.floor(map_value / 10)
-  var color = Math.floor(255 / 4 * (value + 1))
+  let value = map_value % 10
+  let team = Math.floor(map_value / 10)
+  let color = Math.floor(255 / 4 * (value + 1))
   if (color > 255) color = 255
   switch (team) {
     case 0: return 0xFFFFFF
@@ -307,6 +307,14 @@ class Client {
     let self = this
     document.addEventListener('keydown', (e) => self.dom_keydown(e))
     document.addEventListener('keyup', (e) => self.dom_keyup(e))
+
+    document.getElementById('start').onclick = function () {
+      self.socket.emit('start')
+    }
+
+    document.getElementById('restart').onclick = function () {
+      self.socket.emit('restart')
+    }
   }
 
   // Initialize the socket
@@ -413,7 +421,7 @@ const DIR_FOR_KEY = {
   [KEY.D]: C.RIGHT
 }
 
-var key_state = {
+const key_state = {
   [KEY.W]: STATE.UP,
   [KEY.A]: STATE.UP,
   [KEY.S]: STATE.UP,
